@@ -1,0 +1,88 @@
+name: Build Test Package on PR
+
+on:
+  pull_request:
+    branches:
+      - main
+    types: [opened, synchronize, reopened, ready_for_review]
+
+concurrency: # Make sure only one approval check runs at a time for the same PR, so the pull_request workflow doesnt fail after a review is submitted
+  group: approval-check-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  build-package:
+    name: "​" # NOTE: Were using a zero-width space to save some visual clutter in the GitHub Pull Request UI
+    if: github.event.pull_request.draft == false # Only run if the PR is not a draft
+
+    runs-on: ubuntu-latest
+
+    # Manual approval gate: configure this environment in repo settings with "Required reviewers".
+    environment:
+      name: pr-artifact-build
+
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v6
+
+      - name: Configure Fast APT Mirror
+        uses: vegardit/fast-apt-mirror.sh@v1
+
+      - name: Setup Node v24
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install NPM Dependencies
+        run: npm install
+
+      - name: Check Release Version
+        id: version_check
+        run: |
+          chmod +x utils/release_version_check.sh
+          utils/release_version_check.sh
+
+      - name: Install Playwright Driver
+        run: |
+          git clone https://github.com/microsoft/playwright --branch ${{ steps.version_check.outputs.playwright_version }}
+          cd playwright
+          npm ci
+
+      - name: Fetch Client Patches from patchright-nodejs
+        run: |
+          git clone https://github.com/Kaliiiiiiiiii-Vinyzu/patchright-nodejs.git
+          cp patchright-nodejs/patchright_nodejs_patch.js ./patchright_nodejs_patch.js
+          # Append driver patches starting after the marker line; this avoids relying on fixed line offsets.
+          awk '/^\/\/ patchright-driver-patch: start$/ {p=1; next} p' patchright_driver_patch.ts >> patchright_nodejs_patch.js
+          rm -rf patchright-nodejs
+
+      - name: Patch Playwright Driver
+        run: |
+          cd playwright
+          node "../patchright_nodejs_patch.js"
+
+      - name: Generate Playwright Channels
+        # Ignore the error exit code, as the script exits 1 when a file is modified.
+        continue-on-error: true
+        run: |
+          cd playwright
+          node utils/generate_channels.js
+
+      - name: Build Patchright Driver
+        run: |
+          cd playwright
+          npm run build
+          npx playwright install-deps
+          chmod +x utils/build/build-playwright-driver.sh
+          utils/build/build-playwright-driver.sh
+
+      - name: Upload Build Artifacts
+        uses: actions/upload-artifact@v6
+        id: upload_build_artifacts
+        with:
+          name: build-artifacts
+          path: playwright/utils/build/output/playwright-*.zip

@@ -1,0 +1,143 @@
+{
+  "Fd.nl": {
+    "domain": "fd.nl",
+    "allow_cookies": 1,
+    "block_regex": "\\/specials\\.fd\\.nl\\/_next\\/static\\/chunks\\/framework-.+\\.js",
+    "useragent": "googlebot",
+    "upd_version": "4.3.2.5"
+  },
+  "Financial Times": {
+    "domain": "ft.com",
+    "referer": "google",
+    "cs_dompurify": 1,
+    "upd_version": "4.3.3.4"
+  },
+  "Freie Presse.de": {
+    "domain": "freiepresse.de",
+    "allow_cookies": 1,
+    "useragent": "googlebot",
+    "upd_version": "4.3.2.7"
+  },
+  "Harvard Business Review": {
+    "domain": "hbr.org",
+    "block_regex": "(\\.cxense\\.com\\/|cdn\\.tinypass\\.com\\/|\\.adobedtm\\.com\\/.+\\/launch-.+\\.js)",
+    "remove_cookies_select_drop": ["xbc"],
+    "upd_version": "4.3.2.3"
+  },
+  "Hindustan Times": {
+    "domain": "hindustantimes.com",
+    "allow_cookies": 1,
+    "block_regex": "\\.ampproject\\.org\\/v0\\/amp-access-.+\\.js",
+    "cs_code": "[{\"cond\":\".paywall\", \"rm_class\":\"paywall\"}, {\"cond\":\".hide\", \"rm_class\":\"hide\"}, {\"hide_elem\":\"div.paywall-container\"}]",
+    "upd_version": "4.3.3.3"
+  },
+  "London Review of Books": {
+    "domain": "lrb.co.uk",
+    "allow_cookies": 1,
+    "cs_clear_lclstrg": 1,
+    "upd_version": "4.3.2.3"
+  },
+  "Mediahuis Nederland Regional": {
+    "domain": "###_nl_mediahuis_region",
+    "group": [
+      "haarlemsdagblad.nl",
+      "leidschdagblad.nl",
+      "limburger.nl",
+      "noordhollandsdagblad.nl"
+    ],
+    "allow_cookies": 1,
+    "ld_archive_is": "head > meta[name$='article_ispaidcontent'][content='true']|main > article",
+    "cs_code": "[{\"cond\":\"body[style*='popover-top-position:']\", \"set_attrib\":\"style|position: static !important; overflow: visible !important\"}]",
+    "upd_version": "4.3.2.8"
+  },
+  "Nautilus": {
+    "domain": "nautil.us",
+    "allow_cookies": 1,
+    "block_regex": "\\/nautil\\.us\\/_next\\/static\\/chunks\\/pages\\/_sites\\/%5BsiteSlug%5D\\/%5B\\.\\.\\.slug.+\\.js",
+    "upd_version": "4.3.2.4"
+  },
+  "Neue Zürcher Zeitung": {
+    "domain": "nzz.ch",
+    "allow_cookies": 1,
+    "block_regex": "(\\.piano\\.io\\/xbuilder\\/experience\\/execute|\\.cxense\\.com\\/|tms\\.danzz\\.ch\\/scripts\\/t\\.min\\.js)",
+    "upd_version": "4.3.2.5"
+  },
+  "Reach Group UK": {
+    "domain": "###_uk_reach",
+    "group": [
+      "dailyrecord.co.uk",
+      "express.co.uk"
+    ],
+    "allow_cookies": 1,
+    "block_regex": "\\.piano\\.io",
+    "upd_version": "4.3.2.8"
+  },
+  "Roularta Media Group": {
+    "domain": "###_be_roularta",
+    "group": [
+      "beleggersbelangen.nl",
+      "femmesdaujourdhui.be",
+      "flair.be",
+      "knack.be",
+      "kw.be",
+      "levif.be",
+      "libelle.be"
+    ],
+    "allow_cookies": 1,
+    "block_regex": "[\\.\\/]{domain}\\/(script|.+\\/rmg-paywall)\\.js",
+    "useragent": "googlebot",
+    "upd_version": "4.3.3.2"
+  },
+  "Standardmedia.co.ke": {
+    "domain": "standardmedia.co.ke",
+    "allow_cookies": 1,
+    "ld_json": "div.spw-wrap|div.tbl_art>p:not([class])",
+    "upd_version": "4.3.2.7"
+  },
+  "Stereogum": {
+    "domain": "stereogum.com",
+    "allow_cookies": 1,
+    "block_regex": "\\/stereogum\\.com\\/_next\\/static\\/chunks\\/pages\\/_sites\\/%5BsiteSlug%5D\\/%5B\\.\\.\\.slug.+\\.js",
+    "upd_version": "4.3.2.7"
+  },
+  "Swarajyamag": {
+    "domain": "swarajyamag.com",
+    "allow_cookies": 1,
+    "amp_redirect": "div#hide-partial-content",
+    "upd_version": "4.3.3.1"
+  },
+  "T3n.de (removed)": {
+    "domain": "t3n.de",
+    "allow_cookies": 1,
+    "cs_block": 1,
+    "nofix": 1,
+    "upd_version": "4.3.3.1"
+  },
+  "The Daily Wire": {
+    "domain": "dailywire.com",
+    "allow_cookies": 1,
+    "cs_code": "[{\"cond\":\"div[data-narration-container]>div[class]:first-child\", \"rm_attrib\":\"class\"}, {\"hide_elem\":\"div[data-narration-container]>div:not(:first-child)\"}]",
+    "upd_version": "4.3.2.9"
+  },
+  "The Economist": {
+    "domain": "economist.com",
+    "allow_cookies": 1,
+    "block_regex": "(\\/zephr\\/feature|\\.economist\\.com\\/(latest\\/wall-ui|script)\\.js)",
+    "useragent_custom": "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.6533.103 Mobile Safari/537.36 Liskov",
+    "upd_version": "4.3.2.2"
+  },
+  "The Nation": {
+    "domain": "thenation.com",
+    "allow_cookies": 1,
+    "block_regex": "(\\.thenation\\.com\\/wp-content\\/themes\\/.+\\/js\\/paywall\\/main\\.js|\\.ampproject\\.org\\/v0\\/amp-access-.+\\.js)",
+    "upd_version": "4.3.3.6"
+  },
+  "The Times UK": {
+    "domain": "thetimes.com",
+    "allow_cookies": 1,
+    "block_regex": "(\\.zephr\\.com\\/zephr-browser\\/|\\.thetimes\\.com\\/wp-content\\/plugins\\/tm-wp-zephr\\/)",
+    "ld_archive_is":  "div#paywall-takeover|article[id]",
+    "cs_code": "[{\"cond\":\"html,body\", \"rm_attrib\":\"style\"}, {\"hide_elem\":\"div#paywall-portal-page-footer\"}]",
+    "upd_version": "4.3.3.7"
+  }
+}
