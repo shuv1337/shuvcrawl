@@ -88,6 +88,12 @@ export async function mapUrl(
   const url = normalizeUrl(inputUrl);
   const origin = new URL(url).origin;
 
+  // Helper to create child telemetry context with parent span
+  const withParentSpan = (parentSpanId?: string): TelemetryContext => ({
+    ...telemetry,
+    parentSpanId,
+  });
+
   const preflight = await measureStage(logger, 'map.preflight', telemetry, async () => {
     return await allowByRobots(url, config.crawl.respectRobots);
   });
@@ -108,10 +114,10 @@ export async function mapUrl(
   if (needsPageFetch) {
     if (!options.noFastPath && config.fastPath.enabled) {
       try {
-        const fastPath = await tryFastPath(url, config, logger, telemetry);
-        if (fastPath.accepted) {
-          html = fastPath.html;
-          finalUrl = fastPath.finalUrl;
+        const fastPath = await tryFastPath(url, config, logger, withParentSpan(preflight.spanId || undefined));
+        if (fastPath.result.accepted) {
+          html = fastPath.result.html;
+          finalUrl = fastPath.result.finalUrl;
           bypassMethod = 'fast-path';
         }
       } catch (error) {
@@ -127,7 +133,7 @@ export async function mapUrl(
       browserUsed = true;
       try {
         const waitStrategy = options.wait ?? 'load';
-        const browserStage = await measureStage(logger, 'map.browser', telemetry, async () => {
+        const browserStage = await measureStage(logger, 'map.browser', withParentSpan(preflight.spanId || undefined), async () => {
           const timeout = options.waitTimeout ?? config.browser.defaultTimeout;
           let gotoWaitUntil: 'load' | 'networkidle' = 'load';
           if (waitStrategy === 'networkidle') {

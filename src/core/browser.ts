@@ -212,7 +212,7 @@ export class BrowserPool {
 
     const viewport = options?.viewport ?? this.config.browser.viewport;
 
-    const { result } = await measureStage(this.logger, 'browser.acquire', telemetry, async () => {
+    const { result: browserResult } = await measureStage(this.logger, 'browser.acquire', telemetry, async () => {
       this.logger.info('browser.launch.options', {
         ...telemetry,
         userDataDir,
@@ -243,7 +243,7 @@ export class BrowserPool {
       this.logger.info('browser.extension.ready', { ...telemetry, templateInit, extensionId, workerUrl: serviceWorker.url() });
       return { context, page, extensionId };
     });
-    return result;
+    return browserResult;
   }
 
   private async seedBpcState(context: BrowserContext, storageState: Record<string, unknown>, telemetry: TelemetryContext): Promise<void> {

@@ -121,6 +121,12 @@ export async function scrapeUrl(
     }
   }
 
+  // Helper to create child telemetry context with parent span
+  const withParentSpan = (parentSpanId?: string): TelemetryContext => ({
+    ...telemetry,
+    parentSpanId,
+  });
+
   const preflight = await measureStage(logger, 'scrape.preflight', telemetry, async () => {
     return await allowByRobots(url, config.crawl.respectRobots);
   });
@@ -134,6 +140,7 @@ export async function scrapeUrl(
   let browserUsed = false;
   let renderElapsed = 0;
   let waitStrategy: WaitStrategy = 'load';
+  let requestParentSpanId: string | undefined;
   const artifactsDir = options.debugArtifacts || config.artifacts.enabled ? await ensureArtifactDir(config.artifacts.dir, telemetry.requestId) : null;
 
   // Set up custom headers for fast path (convert to strings)
@@ -143,12 +150,13 @@ export async function scrapeUrl(
 
   if (!options.noFastPath && config.fastPath.enabled) {
     try {
-      const fastPath = await tryFastPath(url, config, logger, telemetry, customHeaders);
-      if (fastPath.accepted) {
-        html = fastPath.html;
-        finalUrl = fastPath.finalUrl;
+      const fastPath = await tryFastPath(url, config, logger, withParentSpan(preflight.spanId || undefined), customHeaders);
+      if (fastPath.result.accepted) {
+        html = fastPath.result.html;
+        finalUrl = fastPath.result.finalUrl;
         bypassMethod = 'fast-path';
         waitStrategy = 'load';
+        requestParentSpanId = fastPath.parentSpanId;
       }
     } catch (error) {
       logger.warn('fastpath.fetch.degraded', {
@@ -169,7 +177,7 @@ export async function scrapeUrl(
     try {
       waitStrategy = options.wait ?? 'load';
 
-      const browserStage = await measureStage(logger, 'scrape.browser', telemetry, async () => {
+      const browserStage = await measureStage(logger, 'scrape.browser', withParentSpan(preflight.spanId || undefined), async () => {
         const timeout = options.waitTimeout ?? config.browser.defaultTimeout;
 
         // Determine waitUntil for goto
@@ -198,6 +206,7 @@ export async function scrapeUrl(
       finalUrl = browserStage.result.finalUrl;
       bypassMethod = options.noBpc ? 'direct' : 'bpc-extension';
       renderElapsed += browserStage.elapsed;
+      requestParentSpanId = browserStage.spanId || undefined;
       if (browserStage.result.screenshot) {
         await browser.page.screenshot({ path: browserStage.result.screenshot, fullPage: true });
       }
@@ -211,10 +220,10 @@ export async function scrapeUrl(
     }
   }
 
-  const extractedStage = await measureStage(logger, 'scrape.extract', telemetry, async () =>
+  const extractedStage = await measureStage(logger, 'scrape.extract', withParentSpan(requestParentSpanId), async () =>
     extractDocument(html, finalUrl, config, options.selector, options.onlyMainContent),
   );
-  const markdownStage = await measureStage(logger, 'scrape.convert', telemetry, async () => htmlToMarkdown(extractedStage.result.html));
+  const markdownStage = await measureStage(logger, 'scrape.convert', withParentSpan(requestParentSpanId), async () => htmlToMarkdown(extractedStage.result.html));
   const wordCount = extractedStage.result.textContent.split(/\s+/).filter(Boolean).length;
   const metadata = buildMetadata({
     requestId: telemetry.requestId,

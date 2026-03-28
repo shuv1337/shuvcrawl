@@ -48,8 +48,8 @@ export async function tryFastPath(
   logger: Logger,
   telemetry: TelemetryContext,
   customHeaders?: Record<string, string>,
-): Promise<FastPathResult> {
-  const { result } = await measureStage(logger, 'fastpath.fetch', telemetry, async () => {
+): Promise<{ result: FastPathResult; parentSpanId?: string }> {
+  const { result, spanId } = await measureStage(logger, 'fastpath.fetch', telemetry, async () => {
     // Merge custom headers with defaults (custom headers take precedence)
     const headers: Record<string, string> = {
       'user-agent': config.fastPath.userAgent,
@@ -79,5 +79,5 @@ export async function tryFastPath(
     };
   });
   logger.info('fastpath.result', { ...telemetry, accepted: result.accepted, reason: result.reason, status: result.status });
-  return result;
+  return { result, parentSpanId: spanId || undefined };
 }
