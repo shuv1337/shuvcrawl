@@ -27,11 +27,17 @@ export const BpcConfigSchema = z.object({
   storageOverrides: z.record(z.string(), z.any()).default({}),
 });
 
+export const FastPathTlsConfigSchema = z.object({
+  rejectUnauthorized: z.boolean().default(true),
+  caBundlePath: z.string().nullable().default(null),
+});
+
 export const FastPathConfigSchema = z.object({
   enabled: z.boolean().default(true),
   userAgent: z.string().default('Googlebot/2.1 (+http://www.google.com/bot.html)'),
   referer: z.string().default('https://www.google.com/'),
   minContentLength: z.number().int().nonnegative().default(500),
+  tls: FastPathTlsConfigSchema.default({ rejectUnauthorized: true, caBundlePath: null }),
 });
 
 export const ExtractionConfigSchema = z.object({

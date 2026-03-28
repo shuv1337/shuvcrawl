@@ -46,9 +46,19 @@ function applyEnvOverrides(config: ShuvcrawlConfig): ShuvcrawlConfig {
   const clone = structuredClone(config) as Record<string, any>;
   for (const [key, value] of Object.entries(process.env)) {
     if (!key.startsWith('SHUVCRAWL_') || value == null) continue;
-    const alias = key === 'SHUVCRAWL_BROWSER_EXECUTABLE' || key === 'SHUVCRAWL_BROWSER_EXECUTABLE_PATH'
-      ? 'BROWSER_EXECUTABLEPATH'
-      : key.replace(/^SHUVCRAWL_/, '');
+    let alias: string;
+    // Handle special env var mappings
+    if (key === 'SHUVCRAWL_BROWSER_EXECUTABLE' || key === 'SHUVCRAWL_BROWSER_EXECUTABLE_PATH') {
+      alias = 'BROWSER_EXECUTABLEPATH';
+    } else if (key === 'SHUVCRAWL_TLS_REJECT_UNAUTHORIZED') {
+      // Map to fastpath.tls.rejectunauthorized
+      alias = 'FASTPATH_TLS_REJECTUNAUTHORIZED';
+    } else if (key === 'SHUVCRAWL_FASTPATH_TLS_CABUNDLE') {
+      // Map to fastpath.tls.cabundlepath
+      alias = 'FASTPATH_TLS_CABUNDLEPATH';
+    } else {
+      alias = key.replace(/^SHUVCRAWL_/, '');
+    }
     const pathParts = alias.toLowerCase().split('_');
     if (pathParts.length < 2) continue;
     let cursor: Record<string, any> = clone;
