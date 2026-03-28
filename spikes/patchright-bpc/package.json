@@ -1,0 +1,19 @@
+{
+  "name": "patchright-bpc-spike",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "spike:patchright-bpc": "bun run src/index.ts",
+    "typecheck": "bunx tsc --noEmit",
+    "run:local": "./scripts/run-local.sh",
+    "run:docker": "./scripts/run-docker.sh",
+    "reset-profiles": "./scripts/reset-profiles.sh"
+  },
+  "dependencies": {
+    "patchright": "^1.58.2"
+  },
+  "devDependencies": {
+    "@types/node": "^24.7.2",
+    "typescript": "^5.9.3"
+  }
+}

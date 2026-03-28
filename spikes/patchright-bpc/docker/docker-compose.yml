@@ -1,0 +1,18 @@
+services:
+  patchright-bpc-headless:
+    build:
+      context: ../../..
+      dockerfile: spikes/patchright-bpc/docker/Dockerfile
+    environment:
+      SPIKE_SCENARIO: docker-headless
+      SPIKE_HEADLESS: "1"
+      SPIKE_BROWSER_EXECUTABLE: /usr/bin/chromium
+
+  patchright-bpc-headed:
+    build:
+      context: ../../..
+      dockerfile: spikes/patchright-bpc/docker/Dockerfile
+    environment:
+      SPIKE_SCENARIO: docker-headed
+      SPIKE_HEADLESS: "0"
+      SPIKE_BROWSER_EXECUTABLE: /usr/bin/chromium
