@@ -116,11 +116,11 @@ These are the main external code/docs references to consult during the spike:
 
 ## Proposed spike deliverables
 
-- [ ] A runnable spike harness under a dedicated spike directory
-- [ ] Structured logs showing each stage of BPC bootstrap
-- [ ] A profile workflow that proves template/runtime copy/reset behavior
-- [ ] A Docker validation path with clear result: `headless-ok` or `headed-xvfb-required`
-- [ ] A short evidence report summarizing findings, failures, and recommendation
+- [x] A runnable spike harness under a dedicated spike directory
+- [x] Structured logs showing each stage of BPC bootstrap
+- [x] A profile workflow that proves template/runtime copy/reset behavior
+- [x] A Docker validation path with clear result: `headless-ok` or `headed-xvfb-required`
+- [x] A short evidence report summarizing findings, failures, and recommendation
 
 ---
 
@@ -240,58 +240,58 @@ Success criteria:
 
 ## Phase 1 — Create minimal spike harness
 
-- [ ] Create the spike workspace (`spikes/patchright-bpc/`)
-- [ ] Add Bun package manifest and TS config
-- [ ] Add a simple entrypoint (`src/index.ts`) that orchestrates the spike phases
-- [ ] Add a minimal config layer for:
-  - [ ] BPC path
-  - [ ] profile root
-  - [ ] template profile path
-  - [ ] runtime profile path
-  - [ ] timeouts
-  - [ ] output/artifact directories
-  - [ ] target URL for readiness smoke test
-- [ ] Add structured logger utility with JSON line output
-- [ ] Add simple timing/span helpers for stage durations
+- [x] Create the spike workspace (`spikes/patchright-bpc/`)
+- [x] Add Bun package manifest and TS config
+- [x] Add a simple entrypoint (`src/index.ts`) that orchestrates the spike phases
+- [x] Add a minimal config layer for:
+  - [x] BPC path
+  - [x] profile root
+  - [x] template profile path
+  - [x] runtime profile path
+  - [x] timeouts
+  - [x] output/artifact directories
+  - [x] target URL for readiness smoke test
+- [x] Add structured logger utility with JSON line output
+- [x] Add simple timing/span helpers for stage durations
 
 ### Validation
 
-- [ ] `bun run` starts and prints a structured `spike.start` event
-- [ ] Config resolves correctly on a clean machine
-- [ ] Output directories are created predictably
+- [x] `bun run` starts and prints a structured `spike.start` event
+- [x] Config resolves correctly on a clean machine
+- [x] Output directories are created predictably
 
 ---
 
 ## Phase 2 — Browser launch with extension flags
 
-- [ ] Install and wire Patchright in the spike package
-- [ ] Implement `launch.ts` that:
-  - [ ] resolves BPC path from repo (`./bpc-chrome`)
-  - [ ] creates/uses persistent `userDataDir`
-  - [ ] launches Chromium with:
-    - [ ] `--disable-extensions-except={bpcPath}`
-    - [ ] `--load-extension={bpcPath}`
-  - [ ] records executable/browser version info
-  - [ ] captures launch args in logs
-- [ ] Add explicit timeout and failure classification for browser init failures
+- [x] Install and wire Patchright in the spike package
+- [x] Implement `launch.ts` that:
+  - [x] resolves BPC path from repo (`./bpc-chrome`)
+  - [x] creates/uses persistent `userDataDir`
+  - [x] launches Chromium with:
+    - [x] `--disable-extensions-except={bpcPath}`
+    - [x] `--load-extension={bpcPath}`
+  - [x] records executable/browser version info
+  - [x] captures launch args in logs
+- [x] Add explicit timeout and failure classification for browser init failures
 
 ### Validation
 
-- [ ] Browser launch works locally
-- [ ] Failures include actionable error details in logs
-- [ ] The spike can open a blank page after launch
+- [x] Browser launch works locally
+- [x] Failures include actionable error details in logs
+- [x] The spike can open a blank page after launch
 
 ---
 
 ## Phase 3 — MV3 service worker readiness detection
 
-- [ ] Implement `extension.ts` readiness logic that waits for the BPC service worker
-- [ ] Capture and log:
-  - [ ] extension ID
-  - [ ] service worker URL
-  - [ ] time-to-worker-ready
-- [ ] If the worker is not present immediately, poll/wait until timeout
-- [ ] Persist failure artifacts when readiness times out
+- [x] Implement `extension.ts` readiness logic that waits for the BPC service worker
+- [x] Capture and log:
+  - [x] extension ID
+  - [x] service worker URL
+  - [x] time-to-worker-ready
+- [x] If the worker is not present immediately, poll/wait until timeout
+- [x] Persist failure artifacts when readiness times out
 
 ### Notes
 
@@ -299,115 +299,115 @@ The readiness logic should not rely on “sleep and hope.” It should use a con
 
 ### Validation
 
-- [ ] Worker appears on a fresh profile
-- [ ] Worker appears on a copied runtime profile
-- [ ] Timeout path is deterministic and produces artifacts/logs
+- [x] Worker appears on a fresh profile
+- [x] Worker appears on a copied runtime profile
+- [x] Timeout path is deterministic and produces artifacts/logs
 
 ---
 
 ## Phase 4 — BPC storage inspection and mutation
 
-- [ ] Implement `storage.ts` to inspect BPC storage via browser context automation
-- [ ] Add a storage snapshot step for relevant keys:
-  - [ ] `sites`
-  - [ ] `sites_excluded`
-  - [ ] `sites_custom`
-  - [ ] `sites_updated`
-  - [ ] `optIn`
-  - [ ] `customOptIn`
-  - [ ] `optInUpdate`
-- [ ] Add a controlled write/readback scenario using a test configuration
-- [ ] Store before/after snapshots as JSON artifacts
+- [x] Implement `storage.ts` to inspect BPC storage via browser context automation
+- [x] Add a storage snapshot step for relevant keys:
+  - [x] `sites`
+  - [x] `sites_excluded`
+  - [x] `sites_custom`
+  - [x] `sites_updated`
+  - [x] `optIn`
+  - [x] `customOptIn`
+  - [x] `optInUpdate`
+- [x] Add a controlled write/readback scenario using a test configuration
+- [x] Store before/after snapshots as JSON artifacts
 
 ### Validation
 
-- [ ] All target keys can be observed or explicitly classified as unavailable
-- [ ] At least one controlled mutation survives round-trip verification
-- [ ] Logs explain any keys that behave unexpectedly
+- [x] All target keys can be observed or explicitly classified as unavailable
+- [x] At least one controlled mutation survives round-trip verification
+- [x] Logs explain any keys that behave unexpectedly
 
 ---
 
 ## Phase 5 — Template profile → runtime profile workflow
 
-- [ ] Implement `profile.ts` with helpers for:
-  - [ ] initialize template profile
-  - [ ] copy template → runtime
-  - [ ] reset runtime profile from template
-  - [ ] clean lock/temp files safely
-- [ ] Decide and document whether copying uses:
-  - [ ] filesystem copy
+- [x] Implement `profile.ts` with helpers for:
+  - [x] initialize template profile
+  - [x] copy template → runtime
+  - [x] reset runtime profile from template
+  - [x] clean lock/temp files safely
+- [x] Decide and document whether copying uses:
+  - [x] filesystem copy
   - [ ] rsync-like copy preserving attributes
   - [ ] archive/unpack approach
-- [ ] Record profile sizes and copy durations in logs
+- [x] Record profile sizes and copy durations in logs
 
 ### Validation
 
-- [ ] Template profile can be created once and reused
-- [ ] Runtime reset works repeatedly across multiple runs
-- [ ] Extension readiness still passes after profile copy/reset
+- [x] Template profile can be created once and reused
+- [x] Runtime reset works repeatedly across multiple runs
+- [x] Extension readiness still passes after profile copy/reset
 
 ---
 
 ## Phase 6 — Health check and gated navigation
 
-- [ ] Implement `health.ts` that performs a minimal BPC health check after storage reconciliation and before first navigation
-- [ ] Define a health contract such as:
-  - [ ] service worker present
-  - [ ] storage keys readable
-  - [ ] core config keys in expected state
-- [ ] Implement `scenario.ts` to navigate only after health passes
-- [ ] Add a smoke target strategy:
-  - [ ] one inert page like `https://example.com/`
+- [x] Implement `health.ts` that performs a minimal BPC health check after storage reconciliation and before first navigation
+- [x] Define a health contract such as:
+  - [x] service worker present
+  - [x] storage keys readable
+  - [x] core config keys in expected state
+- [x] Implement `scenario.ts` to navigate only after health passes
+- [x] Add a smoke target strategy:
+  - [x] one inert page like `https://example.com/`
   - [ ] one optional real-world target for manual observation
 
 ### Validation
 
-- [ ] Navigation never begins before health check success
-- [ ] Ordered lifecycle events appear in logs exactly as specified
-- [ ] Health check failures stop navigation with a clear result code
+- [x] Navigation never begins before health check success
+- [x] Ordered lifecycle events appear in logs exactly as specified
+- [x] Health check failures stop navigation with a clear result code
 
 ---
 
 ## Phase 7 — Docker validation
 
-- [ ] Create a spike Dockerfile that installs Bun, Patchright deps, and Chromium runtime dependencies
-- [ ] Add Docker Compose for local execution
-- [ ] Validate both:
-  - [ ] headless mode
-  - [ ] headed mode under Xvfb / virtual display
-- [ ] Capture artifacts for both modes:
-  - [ ] logs
-  - [ ] screenshot of loaded page (if navigation succeeds)
-  - [ ] extension readiness timings
+- [x] Create a spike Dockerfile that installs Bun, Patchright deps, and Chromium runtime dependencies
+- [x] Add Docker Compose for local execution
+- [x] Validate both:
+  - [x] headless mode
+  - [x] headed mode under Xvfb / virtual display
+- [x] Capture artifacts for both modes:
+  - [x] logs
+  - [x] screenshot of loaded page (if navigation succeeds)
+  - [x] extension readiness timings
 
 ### Validation
 
-- [ ] At least one Docker runtime mode passes all earlier scenarios
-- [ ] Final report explicitly recommends Docker baseline mode for shuvcrawl V1
+- [x] At least one Docker runtime mode passes all earlier scenarios
+- [x] Final report explicitly recommends Docker baseline mode for shuvcrawl V1
 
 ---
 
 ## Phase 8 — Evidence report and recommendation
 
-- [ ] Write `output/reports/patchright-bpc-spike-report.md`
-- [ ] Include:
-  - [ ] environment used
-  - [ ] local results
-  - [ ] Docker results
-  - [ ] readiness timings
-  - [ ] storage behavior summary
-  - [ ] profile workflow behavior summary
-  - [ ] unresolved blockers
-  - [ ] recommended next step
-- [ ] Summarize one of:
-  - [ ] proceed with Patchright as spec’d
+- [x] Write `output/reports/patchright-bpc-spike-report.md`
+- [x] Include:
+  - [x] environment used
+  - [x] local results
+  - [x] Docker results
+  - [x] readiness timings
+  - [x] storage behavior summary
+  - [x] profile workflow behavior summary
+  - [x] unresolved blockers
+  - [x] recommended next step
+- [x] Summarize one of:
+  - [x] proceed with Patchright as spec’d
   - [ ] proceed, but require headed/Xvfb in Docker
   - [ ] use alternate browser backend for V1
 
 ### Validation
 
-- [ ] Report is reproducible from saved artifacts/logs
-- [ ] Recommendation is evidence-backed, not intuition-based
+- [x] Report is reproducible from saved artifacts/logs
+- [x] Recommendation is evidence-backed, not intuition-based
 
 ---
 
@@ -417,18 +417,18 @@ The repo-level agent instructions require telemetry-first engineering. Even thou
 
 ### Minimum spike telemetry contract
 
-- [ ] Structured JSON logs for each lifecycle stage
-- [ ] Stable correlation IDs:
-  - [ ] `runId`
-  - [ ] `profileId`
-  - [ ] `scenarioId`
-- [ ] Stage timings for:
-  - [ ] launch
-  - [ ] worker detection
-  - [ ] storage seed
-  - [ ] health check
-  - [ ] navigation
-- [ ] Explicit failure events with error class / cause
+- [x] Structured JSON logs for each lifecycle stage
+- [x] Stable correlation IDs:
+  - [x] `runId`
+  - [x] `profileId`
+  - [x] `scenarioId`
+- [x] Stage timings for:
+  - [x] launch
+  - [x] worker detection
+  - [x] storage seed
+  - [x] health check
+  - [x] navigation
+- [x] Explicit failure events with error class / cause
 - [ ] Optional OTLP stub wiring only if cheap; otherwise local structured logs are sufficient for the spike
 
 ### Suggested event names
@@ -491,13 +491,13 @@ bun run spike:patchright-bpc --scenario docker-headed
 
 The spike is successful if all of the following are true:
 
-- [ ] Patchright launches a persistent Chromium context with unpacked `bpc-chrome`
-- [ ] BPC MV3 service worker readiness can be detected deterministically
-- [ ] Core BPC storage keys can be read, and at least one controlled write/readback succeeds
-- [ ] Template/runtime profile lifecycle is repeatable
-- [ ] Docker has one clearly viable baseline mode
-- [ ] The spike produces enough telemetry/logging to diagnose failures
-- [ ] The final report makes a clear go/no-go recommendation for Patchright as the shuvcrawl V1 backend
+- [x] Patchright launches a persistent Chromium context with unpacked `bpc-chrome`
+- [x] BPC MV3 service worker readiness can be detected deterministically
+- [x] Core BPC storage keys can be read, and at least one controlled write/readback succeeds
+- [x] Template/runtime profile lifecycle is repeatable
+- [x] Docker has one clearly viable baseline mode
+- [x] The spike produces enough telemetry/logging to diagnose failures
+- [x] The final report makes a clear go/no-go recommendation for Patchright as the shuvcrawl V1 backend
 
 ---
 
