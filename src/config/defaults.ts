@@ -16,4 +16,5 @@ export const defaultConfig: ShuvcrawlConfig = ShuvcrawlConfigSchema.parse({
   cache: {},
   crawl: {},
   telemetry: {},
+  storage: {},
 });

@@ -10,11 +10,13 @@ import { mapUrl, type MapOptions, type MapResult } from './map.ts';
 import { crawlSite, type CrawlOptions, type CrawlResult, type CrawlProgressCallback } from './crawl.ts';
 import { DomainRateLimiter } from '../utils/rate-limit.ts';
 import { JobRegistry } from './job-registry.ts';
+import { JobStore } from '../storage/job-store.ts';
 
 export class Engine {
   private readonly browserPool: BrowserPool;
   private readonly rateLimiter: DomainRateLimiter;
   private readonly jobRegistry: JobRegistry;
+  private readonly jobStore: JobStore;
 
   constructor(
     private readonly config: ShuvcrawlConfig,
@@ -22,7 +24,8 @@ export class Engine {
   ) {
     this.browserPool = new BrowserPool(config, logger);
     this.rateLimiter = new DomainRateLimiter();
-    this.jobRegistry = new JobRegistry();
+    this.jobStore = new JobStore(config.storage.jobDbPath);
+    this.jobRegistry = new JobRegistry(this.jobStore);
 
     if (config.telemetry.exporter === 'otlp-http' && config.telemetry.otlpHttpEndpoint) {
       startOtlpExporter(config.telemetry.otlpHttpEndpoint, config.telemetry.serviceName);
