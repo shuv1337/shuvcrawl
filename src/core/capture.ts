@@ -5,17 +5,30 @@ import type { Logger } from '../utils/logger.ts';
 import type { TelemetryContext } from '../utils/telemetry.ts';
 import { measureStage } from '../utils/telemetry.ts';
 import { allowByRobots } from '../utils/robots.ts';
+import { expandHome } from '../utils/paths.ts';
 import { normalizeUrl } from '../utils/url.ts';
-import { ensureArtifactDir } from '../storage/artifacts.ts';
+import { ensureArtifactDir, writeArtifact } from '../storage/artifacts.ts';
 import type { BrowserPool } from './browser.ts';
+
+export type WaitStrategy = 'load' | 'networkidle' | 'selector' | 'sleep';
 
 export type ScreenshotOptions = {
   fullPage?: boolean;
+  // Wait strategies
+  wait?: WaitStrategy;
+  waitFor?: string;
+  waitTimeout?: number;
+  sleep?: number;
 };
 
 export type PdfOptions = {
   format?: string;
   landscape?: boolean;
+  // Wait strategies
+  wait?: WaitStrategy;
+  waitFor?: string;
+  waitTimeout?: number;
+  sleep?: number;
 };
 
 export type ScreenshotResult = {
@@ -45,6 +58,37 @@ export type PdfResult = {
   browserUsed: true;
 };
 
+async function applyWaitStrategy(
+  page: Awaited<ReturnType<BrowserPool['acquire']>>['page'],
+  strategy: WaitStrategy,
+  options: {
+    waitFor?: string;
+    waitTimeout?: number;
+    sleep?: number;
+    defaultTimeout: number;
+  },
+): Promise<void> {
+  const timeout = options.waitTimeout ?? options.defaultTimeout;
+
+  switch (strategy) {
+    case 'load':
+      break;
+    case 'networkidle':
+      await page.waitForLoadState('networkidle', { timeout });
+      break;
+    case 'selector':
+      if (options.waitFor) {
+        await page.waitForSelector(options.waitFor, { timeout });
+      }
+      break;
+    case 'sleep':
+      if (options.sleep) {
+        await page.waitForTimeout(options.sleep);
+      }
+      break;
+  }
+}
+
 export async function captureScreenshot(
   inputUrl: string,
   options: ScreenshotOptions,
@@ -66,14 +110,32 @@ export async function captureScreenshot(
   const browser = await browserPool.acquire(telemetry);
   try {
     const fullPage = options.fullPage ?? true;
+    const waitStrategy = options.wait ?? 'load';
     const capture = await measureStage(logger, 'screenshot.capture', telemetry, async () => {
-      await browser.page.goto(url, { waitUntil: 'load', timeout: config.browser.defaultTimeout });
+      const timeout = options.waitTimeout ?? config.browser.defaultTimeout;
+      const waitUntil = waitStrategy === 'networkidle' ? 'networkidle' : 'load';
+
+      await browser.page.goto(url, { waitUntil, timeout });
+      await applyWaitStrategy(browser.page, waitStrategy, {
+        waitFor: options.waitFor,
+        waitTimeout: options.waitTimeout,
+        sleep: options.sleep,
+        defaultTimeout: config.browser.defaultTimeout,
+      });
+
       const finalUrl = browser.page.url();
       const filePath = path.join(artifactDir, 'page.png');
       await browser.page.screenshot({ path: filePath, fullPage });
       const viewport = browser.page.viewportSize() ?? config.browser.viewport;
       return { finalUrl, filePath, viewport };
     });
+
+    // Write console logs if enabled
+    if (config.artifacts.includeConsole && browser.consoleLogs.length > 0) {
+      const consolePath = path.join(artifactDir, 'console.json');
+      await writeArtifact(artifactDir, 'console.json', JSON.stringify(browser.consoleLogs, null, 2));
+    }
+
     return {
       requestId: telemetry.requestId,
       url,
@@ -114,13 +176,30 @@ export async function renderPdf(
   try {
     const format = options.format ?? 'A4';
     const landscape = options.landscape ?? false;
+    const waitStrategy = options.wait ?? 'load';
     const pdf = await measureStage(logger, 'pdf.render', telemetry, async () => {
-      await browser.page.goto(url, { waitUntil: 'load', timeout: config.browser.defaultTimeout });
+      const timeout = options.waitTimeout ?? config.browser.defaultTimeout;
+      const waitUntil = waitStrategy === 'networkidle' ? 'networkidle' : 'load';
+
+      await browser.page.goto(url, { waitUntil, timeout });
+      await applyWaitStrategy(browser.page, waitStrategy, {
+        waitFor: options.waitFor,
+        waitTimeout: options.waitTimeout,
+        sleep: options.sleep,
+        defaultTimeout: config.browser.defaultTimeout,
+      });
+
       const finalUrl = browser.page.url();
       const filePath = path.join(artifactDir, 'page.pdf');
       await browser.page.pdf({ path: filePath, format: format as any, landscape, printBackground: true });
       return { finalUrl, filePath };
     });
+
+    // Write console logs if enabled
+    if (config.artifacts.includeConsole && browser.consoleLogs.length > 0) {
+      await writeArtifact(artifactDir, 'console.json', JSON.stringify(browser.consoleLogs, null, 2));
+    }
+
     return {
       requestId: telemetry.requestId,
       url,
@@ -139,22 +218,24 @@ export async function renderPdf(
 }
 
 export async function readBpcManifest(config: ShuvcrawlConfig): Promise<{ version: string | null; name: string | null; sourceMode: string; path: string }> {
+  const resolvedPath = path.resolve(expandHome(config.bpc.path));
+
   try {
-    const manifestPath = path.join(path.resolve(config.bpc.path), 'manifest.json');
+    const manifestPath = path.join(resolvedPath, 'manifest.json');
     const raw = await readFile(manifestPath, 'utf8');
     const manifest = JSON.parse(raw) as { version?: string; name?: string };
     return {
       version: manifest.version ?? null,
       name: manifest.name ?? null,
       sourceMode: config.bpc.sourceMode,
-      path: path.resolve(config.bpc.path),
+      path: resolvedPath,
     };
   } catch {
     return {
       version: null,
       name: null,
       sourceMode: config.bpc.sourceMode,
-      path: path.resolve(config.bpc.path),
+      path: resolvedPath,
     };
   }
 }

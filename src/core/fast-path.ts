@@ -11,13 +11,23 @@ export type FastPathResult = {
   finalUrl: string;
 };
 
-export async function tryFastPath(url: string, config: ShuvcrawlConfig, logger: Logger, telemetry: TelemetryContext): Promise<FastPathResult> {
+export async function tryFastPath(
+  url: string,
+  config: ShuvcrawlConfig,
+  logger: Logger,
+  telemetry: TelemetryContext,
+  customHeaders?: Record<string, string>,
+): Promise<FastPathResult> {
   const { result } = await measureStage(logger, 'fastpath.fetch', telemetry, async () => {
+    // Merge custom headers with defaults (custom headers take precedence)
+    const headers: Record<string, string> = {
+      'user-agent': config.fastPath.userAgent,
+      referer: config.fastPath.referer,
+      ...customHeaders,
+    };
+
     const response = await fetch(url, {
-      headers: {
-        'user-agent': config.fastPath.userAgent,
-        referer: config.fastPath.referer,
-      },
+      headers,
       redirect: 'follow',
     });
     const html = await response.text();

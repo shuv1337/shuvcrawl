@@ -32,19 +32,33 @@ function parseEnvValue(raw: string): unknown {
   return raw;
 }
 
+function normalizeEnvSegment(input: string): string {
+  return input.replace(/[^a-zA-Z0-9]/g, '').toLowerCase();
+}
+
+function resolveConfigKey(target: Record<string, any>, rawKey: string): string {
+  const normalized = normalizeEnvSegment(rawKey);
+  const existing = Object.keys(target).find(key => normalizeEnvSegment(key) === normalized);
+  return existing ?? rawKey.toLowerCase();
+}
+
 function applyEnvOverrides(config: ShuvcrawlConfig): ShuvcrawlConfig {
   const clone = structuredClone(config) as Record<string, any>;
   for (const [key, value] of Object.entries(process.env)) {
     if (!key.startsWith('SHUVCRAWL_') || value == null) continue;
-    const pathParts = key.replace(/^SHUVCRAWL_/, '').toLowerCase().split('_');
+    const alias = key === 'SHUVCRAWL_BROWSER_EXECUTABLE' || key === 'SHUVCRAWL_BROWSER_EXECUTABLE_PATH'
+      ? 'BROWSER_EXECUTABLEPATH'
+      : key.replace(/^SHUVCRAWL_/, '');
+    const pathParts = alias.toLowerCase().split('_');
     if (pathParts.length < 2) continue;
     let cursor: Record<string, any> = clone;
     for (let i = 0; i < pathParts.length - 1; i++) {
-      const part = pathParts[i]!;
+      const part = resolveConfigKey(cursor, pathParts[i]!);
       cursor[part] ??= {};
       cursor = cursor[part];
     }
-    cursor[pathParts.at(-1)!] = parseEnvValue(value);
+    const leafKey = resolveConfigKey(cursor, pathParts.at(-1)!);
+    cursor[leafKey] = parseEnvValue(value);
   }
   return ShuvcrawlConfigSchema.parse(clone);
 }

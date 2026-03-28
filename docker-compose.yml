@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  shuvcrawl:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3777:3777"
+    volumes:
+      - ./output:/app/output
+      - shuvcrawl-data:/root/.shuvcrawl
+    environment:
+      - SHUVCRAWL_API_TOKEN=${SHUVCRAWL_API_TOKEN:-}
+      - SHUVCRAWL_TELEMETRY_OTLPHTTPENDPOINT=${SHUVCRAWL_TELEMETRY_OTLPHTTPENDPOINT:-}
+      - SHUVCRAWL_TELEMETRY_LOGLEVEL=${SHUVCRAWL_TELEMETRY_LOGLEVEL:-info}
+      - SHUVCRAWL_BROWSER_HEADLESS=${SHUVCRAWL_BROWSER_HEADLESS:-true}
+      - SHUVCRAWL_CRAWL_RESPECTROBOTS=${SHUVCRAWL_CRAWL_RESPECTROBOTS:-true}
+      - SHUVCRAWL_CACHE_ENABLED=${SHUVCRAWL_CACHE_ENABLED:-true}
+    shm_size: 2gb
+    security_opt:
+      - seccomp:unconfined
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3777/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  shuvcrawl-data:
+    driver: local

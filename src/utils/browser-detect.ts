@@ -2,6 +2,8 @@ import { existsSync } from 'node:fs';
 
 export function detectBrowserExecutable(): string | null {
   const candidates = [
+    process.env.SHUVCRAWL_BROWSER_EXECUTABLE,
+    process.env.SHUVCRAWL_BROWSER_EXECUTABLE_PATH,
     process.env.SHUVCRAWL_BROWSER_EXECUTABLEPATH,
     '/usr/bin/chromium',
     '/usr/bin/chromium-browser',

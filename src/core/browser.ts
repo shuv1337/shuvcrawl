@@ -1,5 +1,5 @@
 import { cp, mkdir, rm } from 'node:fs/promises';
-import { existsSync } from 'node:fs';
+import { existsSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { chromium, type BrowserContext, type Page } from 'patchright';
 import type { ShuvcrawlConfig } from '../config/schema.ts';
@@ -12,12 +12,27 @@ import { expandHome } from '../utils/paths.ts';
 
 declare const chrome: any;
 
+export type Viewport = { width: number; height: number };
+
+export type BrowserSessionOptions = {
+  viewport?: Viewport;
+  extraHTTPHeaders?: Record<string, string>;
+};
+
+export type ConsoleLogEntry = {
+  type: 'log' | 'error' | 'warning' | 'info' | 'debug';
+  text: string;
+  location?: string;
+  timestamp: string;
+};
+
 export type BrowserSession = {
   context: BrowserContext;
   page: Page;
   extensionId: string;
   release: () => Promise<void>;
   profileDir: string;
+  consoleLogs: ConsoleLogEntry[];
 };
 
 export class BrowserPool {
@@ -26,16 +41,57 @@ export class BrowserPool {
   constructor(
     private readonly config: ShuvcrawlConfig,
     private readonly logger: Logger,
-  ) {}
+  ) {
+    // Clean up stale runtime profiles on startup
+    this.cleanupStaleProfiles();
+  }
 
-  async acquire(telemetry: TelemetryContext): Promise<BrowserSession> {
+  /**
+   * Clean up stale runtime profile directories from crashed sessions
+   */
+  private cleanupStaleProfiles(): void {
+    try {
+      const runtimeProfileRoot = expandHome(this.config.browser.runtimeProfile);
+      if (!existsSync(runtimeProfileRoot)) return;
+
+      const entries = readdirSync(runtimeProfileRoot);
+      let cleaned = 0;
+      let totalSize = 0;
+
+      for (const entry of entries) {
+        const entryPath = path.join(runtimeProfileRoot, entry);
+        try {
+          const stats = statSync(entryPath);
+          if (stats.isDirectory()) {
+            totalSize += stats.size;
+            rm(entryPath, { recursive: true, force: true }).catch(() => {});
+            cleaned++;
+          }
+        } catch {
+          // Skip if we can't stat
+        }
+      }
+
+      if (cleaned > 0) {
+        this.logger.warn('browser.stale_profiles.cleaned', {
+          count: cleaned,
+          totalSize,
+          runtimeProfileRoot,
+        });
+      }
+    } catch {
+      // Ignore cleanup errors
+    }
+  }
+
+  async acquire(telemetry: TelemetryContext, options?: BrowserSessionOptions): Promise<BrowserSession> {
     if (this.activeSession) return this.activeSession;
 
     const profileRoot = expandHome(this.config.browser.profileRoot);
     const templateProfile = expandHome(this.config.browser.templateProfile);
     const runtimeProfileRoot = expandHome(this.config.browser.runtimeProfile);
     const runtimeProfile = this.buildRuntimeProfilePath(runtimeProfileRoot, telemetry.requestId);
-    const extensionPath = path.resolve(this.config.bpc.path);
+    const extensionPath = path.resolve(expandHome(this.config.bpc.path));
     const bpc = new BpcAdapter(this.config.bpc);
 
     await mkdir(profileRoot, { recursive: true });
@@ -43,22 +99,27 @@ export class BrowserPool {
     if (!existsSync(templateProfile) || this.config.browser.resetOnStart) {
       await rm(templateProfile, { recursive: true, force: true });
       await mkdir(templateProfile, { recursive: true });
-      const seeded = await this.launchContext(templateProfile, extensionPath, telemetry, true);
+      const seeded = await this.launchContext(templateProfile, extensionPath, telemetry, true, undefined, options);
       await seeded.context.close();
     }
 
     await rm(runtimeProfile, { recursive: true, force: true });
     await cp(templateProfile, runtimeProfile, { recursive: true, force: true });
 
-    const launched = await this.launchContext(runtimeProfile, extensionPath, telemetry, false, resolveProxy(this.config));
+    const launched = await this.launchContext(runtimeProfile, extensionPath, telemetry, false, resolveProxy(this.config), options);
     await this.seedBpcState(launched.context, bpc.buildStorageState(), telemetry);
-    const page = await this.prepareSessionPage(launched.context, launched.page, telemetry);
+
+    // Create console logs array if artifacts are enabled
+    const consoleLogs: ConsoleLogEntry[] = this.config.artifacts.includeConsole ? [] : [];
+
+    const page = await this.prepareSessionPage(launched.context, launched.page, telemetry, options, consoleLogs);
 
     const session: BrowserSession = {
       context: launched.context,
       page,
       extensionId: launched.extensionId,
       profileDir: runtimeProfile,
+      consoleLogs,
       release: async () => {
         await launched.context.close();
         await rm(runtimeProfile, { recursive: true, force: true });
@@ -75,8 +136,55 @@ export class BrowserPool {
     return path.join(runtimeProfileRoot, safeRequestId);
   }
 
-  private async prepareSessionPage(context: BrowserContext, bootstrapPage: Page, telemetry: TelemetryContext): Promise<Page> {
+  private async prepareSessionPage(
+    context: BrowserContext,
+    bootstrapPage: Page,
+    telemetry: TelemetryContext,
+    options?: BrowserSessionOptions,
+    consoleLogs?: ConsoleLogEntry[],
+  ): Promise<Page> {
     const page = await context.newPage();
+
+    // Set up console log collection
+    if (consoleLogs) {
+      page.on('console', async (msg) => {
+        const type = msg.type() as ConsoleLogEntry['type'];
+        const text = msg.text();
+        let location: string | undefined;
+        try {
+          const loc = await msg.location();
+          location = loc.url;
+        } catch {
+          // Location may not always be available
+        }
+
+        consoleLogs.push({
+          type: ['log', 'error', 'warning', 'info', 'debug'].includes(type) ? type : 'log',
+          text,
+          location,
+          timestamp: new Date().toISOString(),
+        });
+      });
+
+      page.on('pageerror', (error) => {
+        consoleLogs.push({
+          type: 'error',
+          text: error.message,
+          timestamp: new Date().toISOString(),
+        });
+      });
+    }
+
+    // Set viewport if provided
+    if (options?.viewport) {
+      await page.setViewportSize(options.viewport);
+    }
+
+    // Set extra HTTP headers if provided
+    if (options?.extraHTTPHeaders && Object.keys(options.extraHTTPHeaders).length > 0) {
+      await page.setExtraHTTPHeaders(options.extraHTTPHeaders);
+    }
+
     await page.goto('about:blank');
     try {
       if (!bootstrapPage.isClosed()) {
@@ -97,9 +205,13 @@ export class BrowserPool {
     telemetry: TelemetryContext,
     templateInit: boolean,
     proxy?: { server: string },
+    options?: BrowserSessionOptions,
   ): Promise<{ context: BrowserContext; page: Page; extensionId: string }> {
     const bpc = new BpcAdapter(this.config.bpc);
     const args = [...this.config.browser.args, ...bpc.getExtensionFlags(extensionPath), '--no-first-run', '--no-default-browser-check'];
+
+    const viewport = options?.viewport ?? this.config.browser.viewport;
+
     const { result } = await measureStage(this.logger, 'browser.acquire', telemetry, async () => {
       this.logger.info('browser.launch.options', {
         ...telemetry,
@@ -109,12 +221,13 @@ export class BrowserPool {
         extensionPath,
         args,
         proxy,
+        viewport,
       });
       const context = await chromium.launchPersistentContext(userDataDir, {
         headless: this.config.browser.headless,
         executablePath: this.config.browser.executablePath ?? undefined,
         args,
-        viewport: this.config.browser.viewport,
+        viewport,
         serviceWorkers: 'allow',
         ignoreHTTPSErrors: true,
         timeout: this.config.browser.defaultTimeout,

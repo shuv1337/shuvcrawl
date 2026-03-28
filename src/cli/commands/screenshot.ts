@@ -9,17 +9,25 @@ export function registerScreenshotCommand(program: Command, engine: Engine) {
     .argument('<url>', 'URL to capture')
     .option('--full-page', 'Capture full page', true)
     .option('--no-full-page', 'Capture viewport only')
-    .option('--json')
+    .option('--wait <strategy>', 'Wait strategy: load|networkidle|selector|sleep', 'load')
+    .option('--wait-for <selector>', 'CSS selector to wait for')
+    .option('--wait-timeout <ms>', 'Timeout for wait strategy in ms', value => Number(value))
+    .option('--sleep <ms>', 'Sleep duration in ms', value => Number(value))
+    .option('--json', 'Output as JSON')
     .action(async (url, options) => {
       try {
         const response = await engine.screenshot(url, {
-          fullPage: options.fullPage,
+          fullPage: options.fullPage !== false,
+          wait: options.wait,
+          waitFor: options.waitFor,
+          waitTimeout: options.waitTimeout,
+          sleep: options.sleep,
         });
 
         if (options.json) {
-          printJson({ success: true, data: response.result, meta: { requestId: response.result.requestId, elapsed: response.result.elapsed, bypassMethod: response.result.bypassMethod } });
+          printJson({ success: true, data: response.result });
         } else {
-          process.stdout.write(`${response.result.path}\n`);
+          process.stdout.write(`Screenshot saved: ${response.result.path}\n`);
         }
       } catch (error) {
         handleCliError(error, { json: options.json });

@@ -4,11 +4,14 @@ import type { Logger } from '../utils/logger.ts';
 import type { BrowserPool } from './browser.ts';
 import { createTelemetryContext } from '../utils/telemetry.ts';
 import { normalizeUrl } from '../utils/url.ts';
-import { defaultMapInclude, shouldIncludeUrl } from './discovery.ts';
+import { defaultMapInclude, shouldIncludeUrl, discoverSitemapUrls } from './discovery.ts';
 import { mapUrl, type MapOptions } from './map.ts';
 import { scrapeUrl, type ScrapeOptions } from './scraper.ts';
 import { writeScrapeOutput } from '../storage/output.ts';
-import { writeCrawlState, type CrawlPageRecord, type CrawlState } from '../storage/crawl-state.ts';
+import { writeCrawlState, loadCrawlState, type CrawlPageRecord, type CrawlState } from '../storage/crawl-state.ts';
+import { DomainRateLimiter } from '../utils/rate-limit.ts';
+
+export type WaitStrategy = 'load' | 'networkidle' | 'selector' | 'sleep';
 
 export type CrawlOptions = {
   depth?: number;
@@ -20,8 +23,21 @@ export type CrawlOptions = {
   resume?: boolean;
   noFastPath?: boolean;
   noBpc?: boolean;
+  noCache?: boolean;
   debugArtifacts?: boolean;
+  // Wait strategies
+  wait?: WaitStrategy;
+  waitFor?: string;
+  waitTimeout?: number;
+  sleep?: number;
 };
+
+export type CrawlProgressCallback = (page: {
+  url: string;
+  depth: number;
+  status: string;
+  elapsed?: number;
+}) => void;
 
 export type CrawlResult = {
   jobId: string;
@@ -37,29 +53,68 @@ export type CrawlResult = {
   results: CrawlPageRecord[];
 };
 
-function delay(ms: number) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
-
 export async function crawlSite(
   inputUrl: string,
   options: CrawlOptions,
   config: ShuvcrawlConfig,
   logger: Logger,
   browserPool: BrowserPool,
+  rateLimiter?: DomainRateLimiter,
+  onProgress?: CrawlProgressCallback,
+  signal?: AbortSignal,
+  jobIdOverride?: string,
 ): Promise<CrawlResult> {
   const seedUrl = normalizeUrl(inputUrl);
-  const jobId = `crawl_${randomUUID()}`;
+  let jobId = jobIdOverride ?? `crawl_${randomUUID()}`;
   const hostname = new URL(seedUrl).hostname;
   const include = options.include?.length ? options.include : [defaultMapInclude(seedUrl)];
   const exclude = options.exclude ?? [];
   const maxDepth = options.depth ?? config.crawl.defaultDepth;
   const limit = options.limit ?? config.crawl.defaultLimit;
-  const crawlDelay = options.delay ?? config.crawl.delay;
 
-  const queue: Array<{ url: string; depth: number }> = [{ url: seedUrl, depth: 0 }];
-  const visited = new Set<string>();
-  const results: CrawlPageRecord[] = [];
+  let queue: Array<{ url: string; depth: number }> = [{ url: seedUrl, depth: 0 }];
+  let visited = new Set<string>();
+  let results: CrawlPageRecord[] = [];
+
+  // Seed from sitemap if requested
+  const source = options.source ?? 'links';
+  if (source === 'sitemap' || source === 'both') {
+    const origin = new URL(seedUrl).origin;
+    const sitemapUrls = await discoverSitemapUrls(origin, logger);
+
+    if (sitemapUrls.length > 0) {
+      logger.info('crawl.sitemap.seeded', { jobId, urls: sitemapUrls.length });
+
+      // Add sitemap URLs to queue (only if not already there)
+      const existingUrls = new Set(queue.map(q => q.url));
+      for (const sitemapUrl of sitemapUrls) {
+        if (!existingUrls.has(sitemapUrl.url)) {
+          queue.push({ url: sitemapUrl.url, depth: 1 }); // Sitemap URLs start at depth 1
+        }
+      }
+    } else if (source === 'sitemap') {
+      logger.warn('crawl.sitemap.empty', { origin });
+    }
+  }
+
+  // Check for resume state
+  if (options.resume) {
+    const state = await loadCrawlState(config.output.dir, hostname);
+    if (state) {
+      // Validate seed URL matches
+      if (state.seedUrl !== seedUrl) {
+        logger.warn('crawl.resume.mismatched-seed', { expected: seedUrl, found: state.seedUrl });
+      } else {
+        if (!jobIdOverride) {
+          jobId = state.jobId;
+        }
+        queue = state.queue.map(q => ({ url: q.url, depth: q.depth }));
+        visited = new Set(state.visited);
+        results = state.results;
+        logger.info('crawl.resume.loaded', { jobId, visited: visited.size, queued: queue.length });
+      }
+    }
+  }
 
   const state: CrawlState = {
     jobId,
@@ -70,13 +125,13 @@ export async function crawlSite(
       limit,
       include,
       exclude,
-      delay: crawlDelay,
+      delay: options.delay ?? config.crawl.delay,
       source: options.source ?? 'links',
       resume: options.resume ?? false,
     },
-    queue: [...queue],
-    visited: [],
-    results: [],
+    queue: queue.map(q => ({ url: q.url, depth: q.depth })),
+    visited: Array.from(visited),
+    results,
     startedAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   };
@@ -84,14 +139,23 @@ export async function crawlSite(
   let statePath = await writeCrawlState(config.output.dir, hostname, state);
 
   while (queue.length > 0 && visited.size < limit) {
+    // Check for cancellation
+    if (signal?.aborted) {
+      state.status = 'cancelled';
+      break;
+    }
+
     const next = queue.shift()!;
-    state.queue = [...queue];
+    state.queue = queue.map(q => ({ url: q.url, depth: q.depth }));
 
     if (visited.has(next.url)) {
       results.push({ url: next.url, depth: next.depth, status: 'skipped-duplicate' });
       state.results = [...results];
       state.visited = Array.from(visited);
       statePath = await writeCrawlState(config.output.dir, hostname, state);
+      if (onProgress) {
+        onProgress({ url: next.url, depth: next.depth, status: 'skipped-duplicate' });
+      }
       continue;
     }
 
@@ -105,16 +169,31 @@ export async function crawlSite(
       state.results = [...results];
       state.visited = Array.from(visited);
       statePath = await writeCrawlState(config.output.dir, hostname, state);
+      if (onProgress) {
+        onProgress({ url: next.url, depth: next.depth, status: 'skipped-filtered' });
+      }
       continue;
     }
 
     visited.add(next.url);
     const telemetry = createTelemetryContext({ jobId });
 
+    // Apply rate limiting before the request
+    if (rateLimiter) {
+      await rateLimiter.waitForDomain(hostname, options.delay ?? config.crawl.delay);
+    }
+
+    const pageStartTime = Date.now();
+
     try {
       const scrape = await scrapeUrl(next.url, {
         noFastPath: options.noFastPath,
         noBpc: options.noBpc,
+        noCache: options.noCache,
+        wait: options.wait,
+        waitFor: options.waitFor,
+        waitTimeout: options.waitTimeout,
+        sleep: options.sleep,
         debugArtifacts: options.debugArtifacts,
       } satisfies ScrapeOptions, config, logger, telemetry, browserPool);
       const output = await writeScrapeOutput(scrape, config);
@@ -130,13 +209,18 @@ export async function crawlSite(
         output,
       });
 
-      if (next.depth < maxDepth) {
+      if (next.depth < maxDepth && source !== 'sitemap') {
         const map = await mapUrl(next.url, {
           noFastPath: options.noFastPath,
           noBpc: options.noBpc,
           include,
           exclude,
           sameOriginOnly: true,
+          source: 'links',
+          wait: options.wait,
+          waitFor: options.waitFor,
+          waitTimeout: options.waitTimeout,
+          sleep: options.sleep,
         } satisfies MapOptions, config, logger, createTelemetryContext({ jobId }), browserPool);
 
         const latest = results[results.length - 1];
@@ -148,30 +232,49 @@ export async function crawlSite(
           }
         }
       }
+
+      if (onProgress) {
+        onProgress({
+          url: next.url,
+          depth: next.depth,
+          status: 'success',
+          elapsed: Date.now() - pageStartTime,
+        });
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       const lowered = message.toLowerCase();
+      const status = lowered.includes('robots') ? 'robots-denied' : 'failed';
       results.push({
         url: next.url,
         depth: next.depth,
-        status: lowered.includes('robots') ? 'robots-denied' : 'failed',
+        status,
         error: message,
       });
+
+      if (onProgress) {
+        onProgress({
+          url: next.url,
+          depth: next.depth,
+          status,
+          elapsed: Date.now() - pageStartTime,
+        });
+      }
     }
 
-    state.queue = [...queue];
+    state.queue = queue.map(q => ({ url: q.url, depth: q.depth }));
     state.visited = Array.from(visited);
     state.results = [...results];
     statePath = await writeCrawlState(config.output.dir, hostname, state);
 
-    if (queue.length > 0 && crawlDelay > 0) {
-      await delay(crawlDelay);
-    }
+    // Rate limiter now handles the delay - no explicit delay here
   }
 
-  state.status = 'completed';
+  if (state.status !== 'cancelled') {
+    state.status = queue.length === 0 ? 'completed' : 'stopped';
+  }
   state.completedAt = new Date().toISOString();
-  state.queue = [...queue];
+  state.queue = queue.map(q => ({ url: q.url, depth: q.depth }));
   state.visited = Array.from(visited);
   state.results = [...results];
   statePath = await writeCrawlState(config.output.dir, hostname, state);

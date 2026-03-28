@@ -1,6 +1,7 @@
 import { JSDOM } from 'jsdom';
+import type { Logger } from '../utils/logger.ts';
 
-export type LinkSource = 'page';
+export type LinkSource = 'page' | 'sitemap';
 
 export type DiscoveredUrl = {
   url: string;
@@ -89,4 +90,162 @@ export function shouldIncludeUrl(
   }
 
   return { included: true };
+}
+
+// Sitemap parsing functions
+
+interface SitemapUrl {
+  loc: string;
+  lastmod?: string;
+  changefreq?: string;
+  priority?: string;
+}
+
+function parseSitemapXml(xml: string, baseUrl: string): SitemapUrl[] {
+  try {
+    const dom = new JSDOM(xml, { contentType: 'application/xml' });
+    const document = dom.window.document;
+    const urls: SitemapUrl[] = [];
+
+    for (const urlNode of Array.from(document.querySelectorAll('url'))) {
+      const loc = urlNode.querySelector('loc')?.textContent;
+      if (!loc) continue;
+
+      try {
+        const normalized = normalizeDiscoveredUrl(new URL(loc, baseUrl).toString());
+        if (normalized) {
+          urls.push({
+            loc: normalized,
+            lastmod: urlNode.querySelector('lastmod')?.textContent ?? undefined,
+            changefreq: urlNode.querySelector('changefreq')?.textContent ?? undefined,
+            priority: urlNode.querySelector('priority')?.textContent ?? undefined,
+          });
+        }
+      } catch {
+        // Skip invalid URLs
+      }
+    }
+
+    return urls;
+  } catch {
+    return [];
+  }
+}
+
+function parseSitemapIndex(xml: string, baseUrl: string): string[] {
+  try {
+    const dom = new JSDOM(xml, { contentType: 'application/xml' });
+    const document = dom.window.document;
+    const sitemaps: string[] = [];
+
+    for (const sitemapNode of Array.from(document.querySelectorAll('sitemap'))) {
+      const loc = sitemapNode.querySelector('loc')?.textContent;
+      if (loc) {
+        try {
+          const resolved = new URL(loc, baseUrl).toString();
+          sitemaps.push(resolved);
+        } catch {
+          // Skip invalid URLs
+        }
+      }
+    }
+
+    return sitemaps;
+  } catch {
+    return [];
+  }
+}
+
+export async function discoverSitemapUrls(
+  origin: string,
+  logger?: Logger,
+  timeout: number = 10000,
+): Promise<DiscoveredUrl[]> {
+  const discovered: DiscoveredUrl[] = [];
+  const seenUrls = new Set<string>();
+
+  const sitemapUrl = `${origin}/sitemap.xml`;
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+    const response = await fetch(sitemapUrl, {
+      signal: controller.signal,
+      headers: {
+        'User-Agent': 'shuvcrawl/1.0 (+https://github.com/shuv/shuvcrawl)',
+        'Accept': 'application/xml, text/xml, */*',
+      },
+    }).finally(() => clearTimeout(timeoutId));
+
+    if (!response.ok) {
+      logger?.debug('sitemap.fetch.failed', { origin, status: response.status });
+      return [];
+    }
+
+    const xml = await response.text();
+
+    // Check if it's a sitemap index
+    const isIndex = xml.includes('<sitemapindex');
+
+    if (isIndex) {
+      const sitemaps = parseSitemapIndex(xml, origin);
+      logger?.debug('sitemap.index.found', { origin, sitemaps: sitemaps.length });
+
+      // Fetch each child sitemap (one level deep)
+      for (const childSitemap of sitemaps.slice(0, 5)) { // Limit to 5 child sitemaps
+        try {
+          const childController = new AbortController();
+          const childTimeout = setTimeout(() => childController.abort(), timeout);
+
+          const childResponse = await fetch(childSitemap, {
+            signal: childController.signal,
+            headers: {
+              'User-Agent': 'shuvcrawl/1.0 (+https://github.com/shuv/shuvcrawl)',
+              'Accept': 'application/xml, text/xml, */*',
+            },
+          }).finally(() => clearTimeout(childTimeout));
+
+          if (childResponse.ok) {
+            const childXml = await childResponse.text();
+            const urls = parseSitemapXml(childXml, origin);
+
+            for (const url of urls) {
+              if (!seenUrls.has(url.loc)) {
+                seenUrls.add(url.loc);
+                discovered.push({
+                  url: url.loc,
+                  source: 'sitemap',
+                  text: null,
+                  rel: null,
+                });
+              }
+            }
+          }
+        } catch (error) {
+          logger?.debug('sitemap.child.fetch.failed', { childSitemap, error: String(error) });
+        }
+      }
+    } else {
+      // Regular sitemap
+      const urls = parseSitemapXml(xml, origin);
+      logger?.debug('sitemap.found', { origin, urls: urls.length });
+
+      for (const url of urls) {
+        if (!seenUrls.has(url.loc)) {
+          seenUrls.add(url.loc);
+          discovered.push({
+            url: url.loc,
+            source: 'sitemap',
+            text: null,
+            rel: null,
+          });
+        }
+      }
+    }
+  } catch (error) {
+    logger?.debug('sitemap.discovery.failed', { origin, error: String(error) });
+  }
+
+  return discovered;
 }

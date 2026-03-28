@@ -40,6 +40,7 @@ export function buildMetadata(params: {
   bypassMethod: 'fast-path' | 'bpc-extension' | 'direct';
   browserUsed: boolean;
   elapsed: number;
+  waitStrategy?: ScrapeMetadata['waitStrategy'];
 }): ScrapeMetadata {
   const dom = new JSDOM(params.html, { url: params.finalUrl });
   const document = dom.window.document;
@@ -84,7 +85,7 @@ export function buildMetadata(params: {
     extractionMethod: params.extractionMethod,
     extractionConfidence: params.extractionConfidence,
     bypassMethod: params.bypassMethod,
-    waitStrategy: 'load',
+    waitStrategy: params.waitStrategy ?? 'load',
     browserUsed: params.browserUsed,
     scrapedAt: new Date().toISOString(),
     elapsed: params.elapsed,

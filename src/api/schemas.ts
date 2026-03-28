@@ -6,9 +6,19 @@ export const ScrapeRequestSchema = z.object({
     selector: z.string().optional(),
     noFastPath: z.boolean().optional(),
     noBpc: z.boolean().optional(),
+    noCache: z.boolean().optional(),
     mobile: z.boolean().optional(),
     proxy: z.string().nullable().optional(),
     debugArtifacts: z.boolean().optional(),
+    // Wait strategies
+    wait: z.enum(['load', 'networkidle', 'selector', 'sleep']).optional(),
+    waitFor: z.string().optional(),
+    waitTimeout: z.number().int().positive().optional(),
+    sleep: z.number().int().nonnegative().optional(),
+    // Scrape-specific options
+    headers: z.object({}).catchall(z.string().or(z.number()).or(z.boolean())).optional(),
+    rawHtml: z.boolean().optional(),
+    onlyMainContent: z.boolean().optional(),
   }).optional().default({}),
 });
 
@@ -20,6 +30,12 @@ export const MapRequestSchema = z.object({
     include: z.array(z.string()).optional(),
     exclude: z.array(z.string()).optional(),
     sameOriginOnly: z.boolean().optional(),
+    source: z.enum(['links', 'sitemap', 'both']).optional(),
+    // Wait strategies for map
+    wait: z.enum(['load', 'networkidle', 'selector', 'sleep']).optional(),
+    waitFor: z.string().optional(),
+    waitTimeout: z.number().int().positive().optional(),
+    sleep: z.number().int().nonnegative().optional(),
   }).optional().default({}),
 });
 
@@ -35,7 +51,13 @@ export const CrawlRequestSchema = z.object({
     resume: z.boolean().optional(),
     noFastPath: z.boolean().optional(),
     noBpc: z.boolean().optional(),
+    noCache: z.boolean().optional(),
     debugArtifacts: z.boolean().optional(),
+    // Wait strategies
+    wait: z.enum(['load', 'networkidle', 'selector', 'sleep']).optional(),
+    waitFor: z.string().optional(),
+    waitTimeout: z.number().int().positive().optional(),
+    sleep: z.number().int().nonnegative().optional(),
   }).optional().default({}),
 });
 
@@ -43,6 +65,11 @@ export const ScreenshotRequestSchema = z.object({
   url: z.string().url(),
   options: z.object({
     fullPage: z.boolean().optional(),
+    // Wait strategies
+    wait: z.enum(['load', 'networkidle', 'selector', 'sleep']).optional(),
+    waitFor: z.string().optional(),
+    waitTimeout: z.number().int().positive().optional(),
+    sleep: z.number().int().nonnegative().optional(),
   }).optional().default({}),
 });
 
@@ -51,6 +78,11 @@ export const PdfRequestSchema = z.object({
   options: z.object({
     format: z.string().optional(),
     landscape: z.boolean().optional(),
+    // Wait strategies
+    wait: z.enum(['load', 'networkidle', 'selector', 'sleep']).optional(),
+    waitFor: z.string().optional(),
+    waitTimeout: z.number().int().positive().optional(),
+    sleep: z.number().int().nonnegative().optional(),
   }).optional().default({}),
 });
 

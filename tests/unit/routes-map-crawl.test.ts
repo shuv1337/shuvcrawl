@@ -10,7 +10,9 @@ function createStubApp() {
     screenshot: async () => ({ result: { requestId: 'req_2', elapsed: 11, bypassMethod: 'bpc-extension' } }),
     pdf: async () => ({ result: { requestId: 'req_3', elapsed: 12, bypassMethod: 'bpc-extension' } }),
     map: async () => ({ result: { requestId: 'req_map', summary: { elapsed: 13, bypassMethod: 'fast-path' }, discovered: [] } }),
-    crawl: async () => ({ result: { jobId: 'crawl_1', status: 'completed', summary: { visited: 1 }, results: [], statePath: './output/example.com/_crawl-state.json' } }),
+    crawlAsync: async () => ({ jobId: 'crawl_1', status: 'running' }),
+    getCrawlJob: async (jobId: string) => ({ jobId, status: 'running', hostname: 'example.com', startedAt: new Date().toISOString() }),
+    cancelCrawlJob: async () => true,
   } as any;
   const config = { ...defaultConfig, api: { ...defaultConfig.api, token: null } };
   return buildApi(engine, config);
@@ -40,5 +42,5 @@ test('POST /crawl returns job envelope', async () => {
   const body = await res.json();
   expect(body.success).toBe(true);
   expect(body.job.jobId).toBe('crawl_1');
-  expect(body.job.status).toBe('completed');
+  expect(body.job.status).toBe('running');
 });
