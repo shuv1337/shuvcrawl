@@ -37,6 +37,7 @@ export type BrowserSession = {
 
 export class BrowserPool {
   private activeSession?: BrowserSession;
+  private pendingAcquire?: Promise<BrowserSession>;
 
   constructor(
     private readonly config: ShuvcrawlConfig,
@@ -86,7 +87,20 @@ export class BrowserPool {
 
   async acquire(telemetry: TelemetryContext, options?: BrowserSessionOptions): Promise<BrowserSession> {
     if (this.activeSession) return this.activeSession;
+    if (this.pendingAcquire) return await this.pendingAcquire;
 
+    this.pendingAcquire = this.createSession(telemetry, options);
+
+    try {
+      const session = await this.pendingAcquire;
+      this.activeSession = session;
+      return session;
+    } finally {
+      this.pendingAcquire = undefined;
+    }
+  }
+
+  private async createSession(telemetry: TelemetryContext, options?: BrowserSessionOptions): Promise<BrowserSession> {
     const profileRoot = expandHome(this.config.browser.profileRoot);
     const templateProfile = expandHome(this.config.browser.templateProfile);
     const runtimeProfileRoot = expandHome(this.config.browser.runtimeProfile);
@@ -109,12 +123,10 @@ export class BrowserPool {
     const launched = await this.launchContext(runtimeProfile, extensionPath, telemetry, false, resolveProxy(this.config), options);
     await this.seedBpcState(launched.context, bpc.buildStorageState(), telemetry);
 
-    // Create console logs array if artifacts are enabled
     const consoleLogs: ConsoleLogEntry[] = this.config.artifacts.includeConsole ? [] : [];
-
     const page = await this.prepareSessionPage(launched.context, launched.page, telemetry, options, consoleLogs);
 
-    const session: BrowserSession = {
+    return {
       context: launched.context,
       page,
       extensionId: launched.extensionId,
@@ -126,9 +138,6 @@ export class BrowserPool {
         this.activeSession = undefined;
       },
     };
-
-    this.activeSession = session;
-    return session;
   }
 
   private buildRuntimeProfilePath(runtimeProfileRoot: string, requestId: string): string {

@@ -63,6 +63,15 @@ export function classifyError(error: unknown): ClassifiedError {
       };
     }
 
+    if (error instanceof SyntaxError && /json|unexpected end of json input|unexpected token/i.test(message)) {
+      return {
+        code: 'INVALID_REQUEST',
+        message: 'Invalid request payload',
+        status: 400,
+        exitCode: 4,
+      };
+    }
+
     if (/unauthorized|forbidden|invalid token|auth/i.test(message)) {
       return {
         code: 'UNAUTHORIZED',

@@ -145,7 +145,7 @@ export async function flushSpansForTest(endpoint: string, serviceName: string, v
 export function startOtlpExporter(
   endpoint: string,
   serviceName: string,
-  flushIntervalMs: number = 30000,
+  flushIntervalMs: number = Number(process.env.SHUVCRAWL_TELEMETRY_FLUSH_INTERVAL_MS ?? 30000),
 ): void {
   if (flushInterval) {
     clearInterval(flushInterval);
@@ -185,6 +185,7 @@ export function startOtlpExporter(
     }
 
     activeExporter = { endpoint, serviceName, version };
+    void flushSpans(endpoint, serviceName, version);
     flushInterval = setInterval(() => {
       void flushSpans(endpoint, serviceName, version);
     }, flushIntervalMs);
