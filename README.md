@@ -140,7 +140,7 @@ curl -H "Authorization: Bearer secret123" http://localhost:3777/health
 ```bash
 curl -X POST http://localhost:3777/scrape \
   -H "Content-Type: application/json" \
-  -d '{"url": "https://example.com/article", "options": {"waitStrategy": "networkidle"}}'
+  -d '{"url": "https://example.com/article", "options": {"wait": "networkidle"}}'
 ```
 
 ### Response Format
@@ -224,6 +224,11 @@ bun test
 # Integration tests (requires Chromium — 17 tests)
 bun run test:integration
 
+# Dockerized black-box API suite + report
+bun run test:api
+# or
+./scripts/test-api-docker.sh --verify-otlp --open-report
+
 # All tests
 bun run test:all
 
@@ -254,6 +259,53 @@ CLI (commander)          REST API (Hono)
          Storage Layer
     (output/, cache/, artifacts/, SQLite job store)
 ```
+
+## Docker API Validation Harness
+
+Run the full containerized API suite:
+
+```bash
+bun run test:api
+# or
+./scripts/test-api-docker.sh --verify-otlp --open-report
+```
+
+What it does:
+
+- starts the Dockerized API and fixture server with isolated run-local state
+- runs black-box API tests against `http://localhost:3777`
+- stores artifacts in `test-results/<run-id>/`
+- generates `report.html` for review
+
+Result package layout:
+
+```text
+test-results/<run-id>/
+├── summary.json
+├── suite.json
+├── manifest.json
+├── report.html
+├── env.json
+├── docker/
+├── api/
+└── runtime/
+```
+
+Each run gets isolated runtime state under `test-results/<run-id>/runtime/`, including output, artifacts, cache, browser profiles, telemetry captures, and the SQLite job DB.
+
+## Bundled Pi Skill
+
+This repo ships a bundled skill at `skills/shuvcrawl/`.
+
+Pi discovers it automatically from the conventional `skills/` directory when you run Pi from the repo root. The package also includes optional `pi.skills` metadata in `package.json` for shipping clarity.
+
+Use it when an agent needs to:
+
+- scrape a page
+- map links
+- run a bounded crawl
+- capture a screenshot or PDF
+- choose between CLI, API, and Docker workflows safely
 
 ## License
 
