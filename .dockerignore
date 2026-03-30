@@ -1,11 +1,5 @@
-# VCS
-.git
-.gitignore
-
-# Spike runtime output
-spikes/patchright-bpc/output
-
-# Common junk
 node_modules
-bun.lockb
-*.log
+output
+test-results
+spikes/patchright-bpc/output
+spikes/patchright-bpc/node_modules

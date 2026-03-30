@@ -14,8 +14,13 @@
     "version": "bun run src/index.ts version",
     "serve": "bun run src/server.ts",
     "test": "bun test",
+    "test:api": "./scripts/test-api-docker.sh",
     "test:integration": "bun test --path-ignore-patterns '' tests/integration/",
     "test:all": "bun test --path-ignore-patterns '' tests/"
+  },
+  "keywords": ["pi-package"],
+  "pi": {
+    "skills": ["./skills"]
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",

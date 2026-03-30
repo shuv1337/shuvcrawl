@@ -1,0 +1,30 @@
+services:
+  fixtures:
+    build:
+      context: .
+      dockerfile: tests/fixtures/Dockerfile
+    ports:
+      - "4444:4444"
+    environment:
+      PORT: 4444
+      TEST_RUNTIME_DIR: /runtime
+      TEST_FIXTURES_CAPTURE_OTLP: ${SHUVCRAWL_TEST_VERIFY_OTLP:-false}
+    volumes:
+      - ${SHUVCRAWL_TEST_RUNTIME_DIR}:/runtime
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:4444/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: "no"
+
+  shuvcrawl:
+    depends_on:
+      - fixtures
+    environment:
+      SHUVCRAWL_CONFIG: /app/test-runtime/config.json
+      SHUVCRAWL_TEST_RUN_ID: ${SHUVCRAWL_TEST_RUN_ID}
+      SHUVCRAWL_TELEMETRY_FLUSH_INTERVAL_MS: ${SHUVCRAWL_TELEMETRY_FLUSH_INTERVAL_MS:-30000}
+    volumes:
+      - ${SHUVCRAWL_TEST_RUNTIME_DIR}:/app/test-runtime
+    restart: "no"
