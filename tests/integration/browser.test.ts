@@ -182,7 +182,8 @@ describe.skipIf(shouldSkipTests)('BPC extension loads', () => {
 
       // Try to evaluate in the service worker context
       const result = await worker.evaluate(() => {
-        return typeof chrome !== 'undefined' && typeof chrome.storage !== 'undefined';
+        // eslint-disable-next-line no-undef — `chrome` is a browser global injected by Chromium
+        return typeof (globalThis as any).chrome !== 'undefined' && typeof (globalThis as any).chrome.storage !== 'undefined';
       });
 
       expect(result).toBe(true);

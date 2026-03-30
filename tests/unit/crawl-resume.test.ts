@@ -1,4 +1,4 @@
-import { describe, expect, it, beforeEach, afterEach, mock } from 'bun:test';
+import { describe, expect, it, beforeEach, afterEach, afterAll, mock } from 'bun:test';
 import { mkdtemp, rm, mkdir } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
@@ -8,6 +8,7 @@ import type { ShuvcrawlConfig } from '../../src/config/schema.ts';
 import type { Logger } from '../../src/utils/logger.ts';
 import type { BrowserPool } from '../../src/core/browser.ts';
 import type { ScrapeResult } from '../../src/core/scraper.ts';
+import type { ScrapeMetadata } from '../../src/core/metadata.ts';
 import type { MapResult } from '../../src/core/map.ts';
 import type { CrawlState } from '../../src/storage/crawl-state.ts';
 
@@ -59,6 +60,10 @@ function createMockConfig(outputDir: string): ShuvcrawlConfig {
       userAgent: 'Googlebot/2.1 (+http://www.google.com/bot.html)',
       referer: 'https://www.google.com/',
       minContentLength: 500,
+      tls: {
+        rejectUnauthorized: true,
+        caBundlePath: null,
+      },
     },
     extraction: {
       selectorOverrides: {},
@@ -104,6 +109,40 @@ function createMockConfig(outputDir: string): ShuvcrawlConfig {
       serviceName: 'shuvcrawl',
       exporter: 'none',
     },
+    storage: {
+      jobDbPath: ':memory:',
+    },
+  };
+}
+
+/** Build a type-safe mock ScrapeMetadata with sensible defaults */
+function createMockMetadata(url: string, overrides: Partial<ScrapeMetadata> = {}): ScrapeMetadata {
+  return {
+    requestId: 'test-req',
+    url,
+    originalUrl: url,
+    finalUrl: url,
+    canonicalUrl: null,
+    scrapedAt: new Date().toISOString(),
+    title: 'Mock',
+    author: null,
+    publishedAt: null,
+    modifiedAt: null,
+    description: null,
+    siteName: null,
+    language: null,
+    wordCount: 10,
+    extractionMethod: 'readability',
+    extractionConfidence: 0.9,
+    bypassMethod: 'direct',
+    waitStrategy: 'load',
+    browserUsed: false,
+    elapsed: 100,
+    status: 'success',
+    openGraph: null,
+    twitterCards: null,
+    ldJson: null,
+    ...overrides,
   };
 }
 
@@ -180,6 +219,10 @@ function normalizeUrl(input: string): string {
 }
 
 // Mock scraper module
+// WARNING: Bun's mock.module() is process-global and irreversible within a
+// test run. Integration tests are excluded from the default `bun test` via
+// bunfig.toml to prevent these mocks from leaking into browser-based tests.
+// See bunfig.toml [test].pathIgnorePatterns and package.json test:integration.
 mock.module('../../src/core/scraper.ts', () => ({
   scrapeUrl: async (url: string): Promise<ScrapeResult> => {
     const normalizedUrl = normalizeUrl(url);
@@ -191,32 +234,7 @@ mock.module('../../src/core/scraper.ts', () => ({
       originalUrl: normalizedUrl,
       content: `# Mock content for ${normalizedUrl}`,
       html: `<h1>Mock</h1>`,
-      metadata: {
-        requestId: 'test-req',
-        url: normalizedUrl,
-        originalUrl: normalizedUrl,
-        finalUrl: normalizedUrl,
-        canonicalUrl: null,
-        scrapedAt: new Date().toISOString(),
-        title: 'Mock',
-        author: null,
-        publishedAt: null,
-        modifiedAt: null,
-        description: null,
-        siteName: null,
-        language: null,
-        wordCount: 10,
-        extractionMethod: 'test',
-        extractionConfidence: 0.9,
-        bypassMethod: 'direct',
-        waitStrategy: 'load',
-        browserUsed: false,
-        elapsed: 100,
-        status: 'success',
-        openGraph: null,
-        twitterCards: null,
-        ldJson: null,
-      },
+      metadata: createMockMetadata(normalizedUrl),
     };
   },
 }));
@@ -256,6 +274,11 @@ mock.module('../../src/storage/output.ts', () => ({
   },
 }));
 
+// Restore mocked modules after all tests to prevent leaking into other test files
+afterAll(() => {
+  mock.restore();
+});
+
 // ============================================================================
 // Test Suite
 // ============================================================================
@@ -290,32 +313,7 @@ describe('crawl resume end-to-end', () => {
       originalUrl: 'https://example.com/page2',
       content: '# Page 2',
       html: '<h1>Page 2</h1>',
-      metadata: {
-        requestId: 'test-req-2',
-        url: 'https://example.com/page2',
-        originalUrl: 'https://example.com/page2',
-        finalUrl: 'https://example.com/page2',
-        canonicalUrl: null,
-        scrapedAt: new Date().toISOString(),
-        title: 'Page 2',
-        author: null,
-        publishedAt: null,
-        modifiedAt: null,
-        description: null,
-        siteName: null,
-        language: null,
-        wordCount: 10,
-        extractionMethod: 'test',
-        extractionConfidence: 0.9,
-        bypassMethod: 'direct',
-        waitStrategy: 'load',
-        browserUsed: false,
-        elapsed: 100,
-        status: 'success',
-        openGraph: null,
-        twitterCards: null,
-        ldJson: null,
-      },
+      metadata: createMockMetadata('https://example.com/page2', { requestId: 'test-req-2', title: 'Page 2' }),
     });
 
     mockScrapeResults.set('https://example.com/page3', {
@@ -323,32 +321,7 @@ describe('crawl resume end-to-end', () => {
       originalUrl: 'https://example.com/page3',
       content: '# Page 3',
       html: '<h1>Page 3</h1>',
-      metadata: {
-        requestId: 'test-req-3',
-        url: 'https://example.com/page3',
-        originalUrl: 'https://example.com/page3',
-        finalUrl: 'https://example.com/page3',
-        canonicalUrl: null,
-        scrapedAt: new Date().toISOString(),
-        title: 'Page 3',
-        author: null,
-        publishedAt: null,
-        modifiedAt: null,
-        description: null,
-        siteName: null,
-        language: null,
-        wordCount: 10,
-        extractionMethod: 'test',
-        extractionConfidence: 0.9,
-        bypassMethod: 'direct',
-        waitStrategy: 'load',
-        browserUsed: false,
-        elapsed: 100,
-        status: 'success',
-        openGraph: null,
-        twitterCards: null,
-        ldJson: null,
-      },
+      metadata: createMockMetadata('https://example.com/page3', { requestId: 'test-req-3', title: 'Page 3' }),
     });
 
     // Write a crawl state where:
@@ -419,32 +392,7 @@ describe('crawl resume end-to-end', () => {
       originalUrl: 'https://example.com/level1',
       content: '# Level 1',
       html: '<h1>Level 1</h1>',
-      metadata: {
-        requestId: 'test-req',
-        url: 'https://example.com/level1',
-        originalUrl: 'https://example.com/level1',
-        finalUrl: 'https://example.com/level1',
-        canonicalUrl: null,
-        scrapedAt: new Date().toISOString(),
-        title: 'Level 1',
-        author: null,
-        publishedAt: null,
-        modifiedAt: null,
-        description: null,
-        siteName: null,
-        language: null,
-        wordCount: 10,
-        extractionMethod: 'test',
-        extractionConfidence: 0.9,
-        bypassMethod: 'direct',
-        waitStrategy: 'load',
-        browserUsed: false,
-        elapsed: 100,
-        status: 'success',
-        openGraph: null,
-        twitterCards: null,
-        ldJson: null,
-      },
+      metadata: createMockMetadata('https://example.com/level1', { title: 'Level 1' }),
     });
 
     mockScrapeResults.set('https://example.com/level2', {
@@ -452,32 +400,7 @@ describe('crawl resume end-to-end', () => {
       originalUrl: 'https://example.com/level2',
       content: '# Level 2',
       html: '<h1>Level 2</h1>',
-      metadata: {
-        requestId: 'test-req',
-        url: 'https://example.com/level2',
-        originalUrl: 'https://example.com/level2',
-        finalUrl: 'https://example.com/level2',
-        canonicalUrl: null,
-        scrapedAt: new Date().toISOString(),
-        title: 'Level 2',
-        author: null,
-        publishedAt: null,
-        modifiedAt: null,
-        description: null,
-        siteName: null,
-        language: null,
-        wordCount: 10,
-        extractionMethod: 'test',
-        extractionConfidence: 0.9,
-        bypassMethod: 'direct',
-        waitStrategy: 'load',
-        browserUsed: false,
-        elapsed: 100,
-        status: 'success',
-        openGraph: null,
-        twitterCards: null,
-        ldJson: null,
-      },
+      metadata: createMockMetadata('https://example.com/level2', { title: 'Level 2' }),
     });
 
     // Write a crawl state with queue entries at different depths
@@ -551,32 +474,7 @@ describe('crawl resume end-to-end', () => {
       originalUrl: 'https://example.com/',
       content: '# Fresh Start',
       html: '<h1>Fresh Start</h1>',
-      metadata: {
-        requestId: 'test-req-fresh',
-        url: 'https://example.com/',
-        originalUrl: 'https://example.com/',
-        finalUrl: 'https://example.com/',
-        canonicalUrl: null,
-        scrapedAt: new Date().toISOString(),
-        title: 'Fresh Start',
-        author: null,
-        publishedAt: null,
-        modifiedAt: null,
-        description: null,
-        siteName: null,
-        language: null,
-        wordCount: 10,
-        extractionMethod: 'test',
-        extractionConfidence: 0.9,
-        bypassMethod: 'direct',
-        waitStrategy: 'load',
-        browserUsed: false,
-        elapsed: 100,
-        status: 'success',
-        openGraph: null,
-        twitterCards: null,
-        ldJson: null,
-      },
+      metadata: createMockMetadata('https://example.com/', { requestId: 'test-req-fresh', title: 'Fresh Start' }),
     });
 
     // Mock map to return empty discovered links
@@ -699,32 +597,7 @@ describe('crawl resume end-to-end', () => {
       originalUrl: 'https://example.com/',
       content: '# Home',
       html: '<h1>Home</h1>',
-      metadata: {
-        requestId: 'test-req-home',
-        url: 'https://example.com/',
-        originalUrl: 'https://example.com/',
-        finalUrl: 'https://example.com/',
-        canonicalUrl: null,
-        scrapedAt: new Date().toISOString(),
-        title: 'Home',
-        author: null,
-        publishedAt: null,
-        modifiedAt: null,
-        description: null,
-        siteName: null,
-        language: null,
-        wordCount: 10,
-        extractionMethod: 'test',
-        extractionConfidence: 0.9,
-        bypassMethod: 'direct',
-        waitStrategy: 'load',
-        browserUsed: false,
-        elapsed: 100,
-        status: 'success',
-        openGraph: null,
-        twitterCards: null,
-        ldJson: null,
-      },
+      metadata: createMockMetadata('https://example.com/', { requestId: 'test-req-home', title: 'Home' }),
     });
 
     mockScrapeResults.set('https://example.com/page1', {
@@ -732,32 +605,7 @@ describe('crawl resume end-to-end', () => {
       originalUrl: 'https://example.com/page1',
       content: '# Page 1',
       html: '<h1>Page 1</h1>',
-      metadata: {
-        requestId: 'test-req-p1',
-        url: 'https://example.com/page1',
-        originalUrl: 'https://example.com/page1',
-        finalUrl: 'https://example.com/page1',
-        canonicalUrl: null,
-        scrapedAt: new Date().toISOString(),
-        title: 'Page 1',
-        author: null,
-        publishedAt: null,
-        modifiedAt: null,
-        description: null,
-        siteName: null,
-        language: null,
-        wordCount: 10,
-        extractionMethod: 'test',
-        extractionConfidence: 0.9,
-        bypassMethod: 'direct',
-        waitStrategy: 'load',
-        browserUsed: false,
-        elapsed: 100,
-        status: 'success',
-        openGraph: null,
-        twitterCards: null,
-        ldJson: null,
-      },
+      metadata: createMockMetadata('https://example.com/page1', { requestId: 'test-req-p1', title: 'Page 1' }),
     });
 
     mockScrapeResults.set('https://example.com/page2', {
@@ -765,32 +613,7 @@ describe('crawl resume end-to-end', () => {
       originalUrl: 'https://example.com/page2',
       content: '# Page 2',
       html: '<h1>Page 2</h1>',
-      metadata: {
-        requestId: 'test-req-p2',
-        url: 'https://example.com/page2',
-        originalUrl: 'https://example.com/page2',
-        finalUrl: 'https://example.com/page2',
-        canonicalUrl: null,
-        scrapedAt: new Date().toISOString(),
-        title: 'Page 2',
-        author: null,
-        publishedAt: null,
-        modifiedAt: null,
-        description: null,
-        siteName: null,
-        language: null,
-        wordCount: 10,
-        extractionMethod: 'test',
-        extractionConfidence: 0.9,
-        bypassMethod: 'direct',
-        waitStrategy: 'load',
-        browserUsed: false,
-        elapsed: 100,
-        status: 'success',
-        openGraph: null,
-        twitterCards: null,
-        ldJson: null,
-      },
+      metadata: createMockMetadata('https://example.com/page2', { requestId: 'test-req-p2', title: 'Page 2' }),
     });
 
     // Mock map to return discovered URLs

@@ -1,0 +1,6 @@
+[test]
+# Exclude integration tests from default `bun test` — they require a real
+# Chromium binary and must run separately to avoid mock.module() leakage
+# from unit tests (Bun's mock.module is process-global and irreversible).
+# Run integration tests with: bun test tests/integration/
+pathIgnorePatterns = ["**/integration/**"]

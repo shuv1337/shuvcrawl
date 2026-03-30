@@ -13,7 +13,9 @@
     "config": "bun run src/index.ts config",
     "version": "bun run src/index.ts version",
     "serve": "bun run src/server.ts",
-    "test": "bun test"
+    "test": "bun test",
+    "test:integration": "bun test --path-ignore-patterns '' tests/integration/",
+    "test:all": "bun test --path-ignore-patterns '' tests/"
   },
   "dependencies": {
     "@mozilla/readability": "^0.6.0",

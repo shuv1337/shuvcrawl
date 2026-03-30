@@ -84,6 +84,7 @@ describe('fast-path TLS config', () => {
 
     const telemetry: TelemetryContext = {
       requestId: 'test-request',
+      traceId: '00000000000000000000000000000000',
     };
 
     const config: ShuvcrawlConfig = buildConfig({
@@ -120,6 +121,7 @@ describe('fast-path TLS config', () => {
 
     const telemetry: TelemetryContext = {
       requestId: 'test-request',
+      traceId: '00000000000000000000000000000000',
     };
 
     const config: ShuvcrawlConfig = buildConfig();
@@ -149,6 +151,7 @@ describe('fast-path TLS config', () => {
 
     const telemetry: TelemetryContext = {
       requestId: 'test-request',
+      traceId: '00000000000000000000000000000000',
     };
 
     const config: ShuvcrawlConfig = buildConfig({
