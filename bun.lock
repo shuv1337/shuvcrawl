@@ -9,7 +9,7 @@
         "commander": "^14.0.1",
         "hono": "^4.9.8",
         "jsdom": "^27.0.0",
-        "patchright": "^1.58.2",
+        "patchright": "1.58.2",
         "turndown": "^7.2.1",
         "turndown-plugin-gfm": "^1.0.2",
         "zod": "^4.1.11",
