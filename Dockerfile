@@ -36,8 +36,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
   libxss1 \
   libxtst6 \
   xdg-utils \
-  # Xvfb needed if MV3 extensions require headed mode
+  # Xvfb + xauth needed for headed mode in Docker (MV3 extensions)
   xvfb \
+  xauth \
   && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /app
@@ -60,12 +61,17 @@ RUN mkdir -p /app/output /root/.shuvcrawl
 
 # Environment configuration
 ENV NODE_ENV=production
-ENV SHUVCRAWL_BROWSER_EXECUTABLE=/usr/bin/chromium
-ENV SHUVCRAWL_BROWSER_HEADLESS=true
+# Let Patchright use its own patched Chromium (not system chromium)
+# System chromium lacks Patchright's anti-detection patches
+# ENV SHUVCRAWL_BROWSER_EXECUTABLE=/usr/bin/chromium
+ENV SHUVCRAWL_BROWSER_HEADLESS=false
 
 # Expose API port
 EXPOSE 3777
 
-# Default command runs the API server
-# Use xvfb-run if MV3 extensions require headed mode, otherwise direct bun
-CMD ["bun", "run", "src/server.ts"]
+# Copy entrypoint that starts Xvfb then bun
+COPY entrypoint.sh /app/entrypoint.sh
+RUN chmod +x /app/entrypoint.sh
+
+# Headed Chromium via Xvfb — required for MV3 extensions (BPC)
+CMD ["/app/entrypoint.sh"]
