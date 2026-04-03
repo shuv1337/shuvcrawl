@@ -8,7 +8,7 @@ import { allowByRobots } from '../utils/robots.ts';
 import { expandHome } from '../utils/paths.ts';
 import { normalizeUrl } from '../utils/url.ts';
 import { ensureArtifactDir, writeArtifact } from '../storage/artifacts.ts';
-import type { BrowserPool } from './browser.ts';
+import type { BrowserPoolLike } from './browser.ts';
 
 export type WaitStrategy = 'load' | 'networkidle' | 'selector' | 'sleep';
 
@@ -59,7 +59,7 @@ export type PdfResult = {
 };
 
 async function applyWaitStrategy(
-  page: Awaited<ReturnType<BrowserPool['acquire']>>['page'],
+  page: Awaited<ReturnType<BrowserPoolLike['acquire']>>['page'],
   strategy: WaitStrategy,
   options: {
     waitFor?: string;
@@ -95,7 +95,7 @@ export async function captureScreenshot(
   config: ShuvcrawlConfig,
   logger: Logger,
   telemetry: TelemetryContext,
-  browserPool: BrowserPool,
+  browserPool: BrowserPoolLike,
 ): Promise<ScreenshotResult> {
   const originalUrl = inputUrl;
   const url = normalizeUrl(inputUrl);
@@ -160,7 +160,7 @@ export async function renderPdf(
   config: ShuvcrawlConfig,
   logger: Logger,
   telemetry: TelemetryContext,
-  browserPool: BrowserPool,
+  browserPool: BrowserPoolLike,
 ): Promise<PdfResult> {
   const originalUrl = inputUrl;
   const url = normalizeUrl(inputUrl);

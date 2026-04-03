@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { ShuvcrawlConfig } from '../config/schema.ts';
 import type { Logger } from '../utils/logger.ts';
-import type { BrowserPool } from './browser.ts';
+import type { BrowserPoolLike } from './browser.ts';
 import { createTelemetryContext } from '../utils/telemetry.ts';
 import { normalizeUrl } from '../utils/url.ts';
 import { defaultMapInclude, shouldIncludeUrl, discoverSitemapUrls } from './discovery.ts';
@@ -58,7 +58,7 @@ export async function crawlSite(
   options: CrawlOptions,
   config: ShuvcrawlConfig,
   logger: Logger,
-  browserPool: BrowserPool,
+  browserPool: BrowserPoolLike,
   rateLimiter?: DomainRateLimiter,
   onProgress?: CrawlProgressCallback,
   signal?: AbortSignal,

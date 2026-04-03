@@ -5,7 +5,7 @@ import { measureStage } from '../utils/telemetry.ts';
 import { allowByRobots } from '../utils/robots.ts';
 import { normalizeUrl } from '../utils/url.ts';
 import { tryFastPath } from './fast-path.ts';
-import { BrowserPool } from './browser.ts';
+import type { BrowserPoolLike } from './browser.ts';
 import { extractDocument } from './extractor.ts';
 import { htmlToMarkdown } from './converter.ts';
 import { buildMetadata, type ScrapeMetadata } from './metadata.ts';
@@ -48,7 +48,7 @@ export type ScrapeResult = {
 };
 
 async function applyWaitStrategy(
-  page: Awaited<ReturnType<BrowserPool['acquire']>>['page'],
+  page: Awaited<ReturnType<BrowserPoolLike['acquire']>>['page'],
   strategy: WaitStrategy,
   options: {
     waitFor?: string;
@@ -86,7 +86,7 @@ export async function scrapeUrl(
   config: ShuvcrawlConfig,
   logger: Logger,
   telemetry: TelemetryContext,
-  browserPool: BrowserPool,
+  browserPool: BrowserPoolLike,
 ): Promise<ScrapeResult> {
   const originalUrl = inputUrl;
   const url = normalizeUrl(inputUrl);

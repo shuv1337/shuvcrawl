@@ -5,7 +5,7 @@ import { measureStage } from '../utils/telemetry.ts';
 import { allowByRobots } from '../utils/robots.ts';
 import { normalizeUrl } from '../utils/url.ts';
 import { tryFastPath } from './fast-path.ts';
-import type { BrowserPool } from './browser.ts';
+import type { BrowserPoolLike } from './browser.ts';
 import { discoverPageLinks, discoverSitemapUrls, defaultMapInclude, shouldIncludeUrl } from './discovery.ts';
 
 export type WaitStrategy = 'load' | 'networkidle' | 'selector' | 'sleep';
@@ -45,7 +45,7 @@ export type MapResult = {
 };
 
 async function applyWaitStrategy(
-  page: Awaited<ReturnType<BrowserPool['acquire']>>['page'],
+  page: Awaited<ReturnType<BrowserPoolLike['acquire']>>['page'],
   strategy: WaitStrategy,
   options: {
     waitFor?: string;
@@ -82,7 +82,7 @@ export async function mapUrl(
   config: ShuvcrawlConfig,
   logger: Logger,
   telemetry: TelemetryContext,
-  browserPool: BrowserPool,
+  browserPool: BrowserPoolLike,
 ): Promise<MapResult> {
   const originalUrl = inputUrl;
   const url = normalizeUrl(inputUrl);

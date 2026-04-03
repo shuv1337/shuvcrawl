@@ -35,7 +35,12 @@ export type BrowserSession = {
   consoleLogs: ConsoleLogEntry[];
 };
 
-export class BrowserPool {
+/** Shared interface for both Docker and Native browser pools */
+export type BrowserPoolLike = {
+  acquire(telemetry: TelemetryContext, options?: BrowserSessionOptions): Promise<BrowserSession>;
+};
+
+export class BrowserPool implements BrowserPoolLike {
   private activeSession?: BrowserSession;
   private pendingAcquire?: Promise<BrowserSession>;
 

@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import type { ShuvcrawlConfig } from '../config/schema.ts';
 import type { Logger } from '../utils/logger.ts';
-import type { BrowserPool } from './browser.ts';
+import type { BrowserPoolLike } from './browser.ts';
 import { crawlSite, type CrawlOptions, type CrawlResult } from './crawl.ts';
 import { DomainRateLimiter } from '../utils/rate-limit.ts';
 import { JobStore, type PersistedJob, type JobStatus } from '../storage/job-store.ts';
@@ -34,7 +34,7 @@ export class JobRegistry {
     options: CrawlOptions,
     config: ShuvcrawlConfig,
     logger: Logger,
-    browserPool: BrowserPool,
+    browserPool: BrowserPoolLike,
     rateLimiter?: DomainRateLimiter,
   ): Promise<{ jobId: string; status: string }> {
     const hostname = new URL(url).hostname;
