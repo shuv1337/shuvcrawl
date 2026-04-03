@@ -1,6 +1,7 @@
 import type { ShuvcrawlConfig } from '../config/schema.ts';
 import type { Logger } from '../utils/logger.ts';
-import { BrowserPool } from './browser.ts';
+import { BrowserPool, type BrowserPoolLike } from './browser.ts';
+import { NativeBrowserPool } from './native-browser.ts';
 import { scrapeUrl, type ScrapeOptions, type ScrapeResult } from './scraper.ts';
 import { createTelemetryContext, startOtlpExporter } from '../utils/telemetry.ts';
 import { writeScrapeOutput } from '../storage/output.ts';
@@ -13,7 +14,7 @@ import { JobRegistry } from './job-registry.ts';
 import { JobStore } from '../storage/job-store.ts';
 
 export class Engine {
-  private readonly browserPool: BrowserPool;
+  private readonly browserPool: BrowserPoolLike;
   private readonly rateLimiter: DomainRateLimiter;
   private readonly jobRegistry: JobRegistry;
   private readonly jobStore: JobStore;
@@ -22,7 +23,13 @@ export class Engine {
     private readonly config: ShuvcrawlConfig,
     private readonly logger: Logger,
   ) {
-    this.browserPool = new BrowserPool(config, logger);
+    if (config.browser.native.enabled) {
+      logger.info('engine.browser_pool', { mode: 'native', wsEndpoint: config.browser.native.wsEndpoint });
+      this.browserPool = new NativeBrowserPool(config, logger);
+    } else {
+      logger.info('engine.browser_pool', { mode: 'docker' });
+      this.browserPool = new BrowserPool(config, logger);
+    }
     this.rateLimiter = new DomainRateLimiter();
     this.jobStore = new JobStore(config.storage.jobDbPath);
     this.jobRegistry = new JobRegistry(this.jobStore);

@@ -1,7 +1,12 @@
 import { z } from 'zod';
 
+export const NativeBrowserConfigSchema = z.object({
+  enabled: z.boolean().default(false),
+  wsEndpoint: z.string().default('ws://host.docker.internal:9224'),
+});
+
 export const BrowserConfigSchema = z.object({
-  headless: z.boolean().default(true),
+  headless: z.boolean().default(false),
   executablePath: z.string().nullable().default(null),
   args: z.array(z.string()).default([]),
   defaultTimeout: z.number().int().positive().default(30_000),
@@ -13,6 +18,7 @@ export const BrowserConfigSchema = z.object({
   templateProfile: z.string().default('~/.shuvcrawl/browser/template'),
   runtimeProfile: z.string().default('~/.shuvcrawl/browser/runtime'),
   resetOnStart: z.boolean().default(false),
+  native: NativeBrowserConfigSchema.default({ enabled: false }),
 });
 
 export const BpcConfigSchema = z.object({

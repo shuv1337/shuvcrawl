@@ -13,6 +13,7 @@
     "config": "bun run src/index.ts config",
     "version": "bun run src/index.ts version",
     "serve": "bun run src/server.ts",
+    "native": "bun run src/native-browser-server.ts",
     "test": "bun test",
     "test:api": "./scripts/test-api-docker.sh",
     "test:integration": "bun test --path-ignore-patterns '' tests/integration/",
