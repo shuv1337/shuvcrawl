@@ -11,6 +11,7 @@ import { htmlToMarkdown } from './converter.ts';
 import { buildMetadata, type ScrapeMetadata } from './metadata.ts';
 import { ensureArtifactDir, writeArtifact } from '../storage/artifacts.ts';
 import { buildCacheKey, readCache, writeCache } from '../storage/cache.ts';
+import { isTweetUrl, fetchTweet } from './twitter.ts';
 
 export type WaitStrategy = 'load' | 'networkidle' | 'selector' | 'sleep';
 
@@ -120,6 +121,48 @@ export async function scrapeUrl(
       hydrated.artifacts = undefined;
       return hydrated;
     }
+  }
+
+  // Twitter/X URL fast path — use FxTwitter API instead of browser
+  if (isTweetUrl(url)) {
+    const twitterStage = await measureStage(logger, 'scrape.twitter', telemetry, async () => {
+      return await fetchTweet(url, logger, telemetry);
+    });
+
+    const twitterResult = twitterStage.result;
+    const metadata = buildMetadata({
+      requestId: telemetry.requestId,
+      url,
+      originalUrl,
+      finalUrl: url,
+      html: twitterResult.html,
+      title: twitterResult.title,
+      wordCount: twitterResult.wordCount,
+      extractionMethod: 'readability',
+      extractionConfidence: 1.0,
+      bypassMethod: 'fast-path',
+      browserUsed: false,
+      elapsed: twitterStage.elapsed,
+      waitStrategy: 'load',
+    });
+    // Override metadata fields that buildMetadata can't extract from our minimal HTML
+    metadata.author = twitterResult.author;
+    metadata.siteName = 'X (Twitter)';
+
+    const result: ScrapeResult = {
+      url,
+      originalUrl,
+      content: twitterResult.content,
+      html: twitterResult.html,
+      metadata,
+    };
+
+    // Write to cache
+    if (config.cache.enabled && !options.noCache) {
+      await writeCache(config.cache.dir, cacheKey, result);
+    }
+
+    return result;
   }
 
   // Helper to create child telemetry context with parent span
