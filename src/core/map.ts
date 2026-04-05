@@ -6,7 +6,7 @@ import { allowByRobots } from '../utils/robots.ts';
 import { normalizeUrl } from '../utils/url.ts';
 import { tryFastPath } from './fast-path.ts';
 import type { BrowserPoolLike } from './browser.ts';
-import { discoverPageLinks, discoverSitemapUrls, defaultMapInclude, shouldIncludeUrl } from './discovery.ts';
+import { discoverPageLinks, discoverSitemapUrls, defaultMapInclude, shouldIncludeUrl, type BlockRole } from './discovery.ts';
 
 export type WaitStrategy = 'load' | 'networkidle' | 'selector' | 'sleep';
 
@@ -34,6 +34,10 @@ export type MapResult = {
     source: 'page' | 'sitemap';
     text: string | null;
     rel: string | null;
+    context?: string | null;
+    domPath?: string | null;
+    blockSignature?: string | null;
+    blockRole?: BlockRole | null;
   }>;
   summary: {
     discoveredCount: number;

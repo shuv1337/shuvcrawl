@@ -3,9 +3,9 @@ import { defaultMapInclude, discoverPageLinks, shouldIncludeUrl } from '../../sr
 
 test('discoverPageLinks resolves and deduplicates links', () => {
   const html = `
-    <a href="/docs/start">Start</a>
-    <a href="https://example.com/docs/start#intro">Duplicate</a>
-    <a href="https://other.example.com/out">Out</a>
+    <main id="content"><article class="post-body"><p>Read the <a href="/docs/start">Start</a> guide now.</p></article></main>
+    <main id="content"><article class="post-body"><p><a href="https://example.com/docs/start#intro">Duplicate</a></p></article></main>
+    <footer class="site-footer"><a href="https://other.example.com/out">Out</a></footer>
     <a href="mailto:test@example.com">Email</a>
   `;
 
@@ -14,6 +14,11 @@ test('discoverPageLinks resolves and deduplicates links', () => {
     'https://example.com/docs/start',
     'https://other.example.com/out',
   ]);
+  expect(links[0]?.blockRole).toBe('main_content');
+  expect(links[0]?.blockSignature).toContain('host:example.com:block:');
+  expect(links[0]?.domPath).toContain('a');
+  expect(links[0]?.context).toContain('Start');
+  expect(links[1]?.blockRole).toBe('footer');
 });
 
 test('defaultMapInclude uses seed origin wildcard', () => {

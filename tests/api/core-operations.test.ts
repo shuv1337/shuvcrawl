@@ -19,6 +19,9 @@ test('POST /scrape succeeds against fixture article', async () => {
     expect(body.data.metadata.bypassMethod).toBe('bpc-extension');
     expect(body.data.metadata.title).toBe('Fixture Article');
     expect(body.data.rawHtml).toContain('deterministic article');
+    expect(body.data.links.length).toBeGreaterThan(0);
+    expect(body.data.linkDetails.length).toBeGreaterThan(0);
+    expect(typeof body.data.linkDetails[0].domPath).toBe('string');
     expect(body.meta.requestId).toBeTruthy();
 
     await assertFileExists(body.output.jsonPath);
@@ -64,6 +67,7 @@ test('POST /map discovers fixture links', async () => {
     expect(discoveredUrls).toContain(fixture('/article.html'));
     expect(discoveredUrls).toContain(fixture('/site/page-1.html'));
     expect(discoveredUrls).not.toContain('https://example.com/offsite');
+    expect(body.data.discovered.some((entry: { domPath?: string | null }) => typeof entry.domPath === 'string')).toBe(true);
   });
 });
 

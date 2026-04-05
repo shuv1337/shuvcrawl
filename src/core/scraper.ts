@@ -11,6 +11,7 @@ import { htmlToMarkdown } from './converter.ts';
 import { buildMetadata, type ScrapeMetadata } from './metadata.ts';
 import { ensureArtifactDir, writeArtifact } from '../storage/artifacts.ts';
 import { buildCacheKey, readCache, writeCache } from '../storage/cache.ts';
+import { discoverPageLinks, type BlockRole } from './discovery.ts';
 
 export type WaitStrategy = 'load' | 'networkidle' | 'selector' | 'sleep';
 
@@ -39,6 +40,17 @@ export type ScrapeResult = {
   content: string;
   html: string;
   rawHtml?: string;
+  links?: string[];
+  linkDetails?: Array<{
+    url: string;
+    source: 'page' | 'sitemap';
+    text: string | null;
+    rel: string | null;
+    context?: string | null;
+    domPath?: string | null;
+    blockSignature?: string | null;
+    blockRole?: BlockRole | null;
+  }>;
   metadata: ScrapeMetadata;
   artifacts?: {
     requestId: string;
@@ -248,12 +260,16 @@ export async function scrapeUrl(
     await writeArtifact(artifactsDir, 'clean.html', extractedStage.result.html);
   }
 
+  const linkDetails = discoverPageLinks(html, finalUrl);
+
   const result: ScrapeResult = {
     url,
     originalUrl,
     content: markdownStage.result,
     html: extractedStage.result.html,
     rawHtml: (options.rawHtml || config.artifacts.includeRawHtml) ? html : undefined,
+    links: linkDetails.map((link) => link.url),
+    linkDetails,
     metadata,
     artifacts: artifactsDir ? {
       requestId: telemetry.requestId,
