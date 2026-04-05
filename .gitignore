@@ -1,3 +1,5 @@
 node_modules/
 output/
 test-results/
+.native-profile/
+.env

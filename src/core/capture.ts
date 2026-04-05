@@ -19,6 +19,7 @@ export type ScreenshotOptions = {
   waitFor?: string;
   waitTimeout?: number;
   sleep?: number;
+  noRobots?: boolean;
 };
 
 export type PdfOptions = {
@@ -29,6 +30,7 @@ export type PdfOptions = {
   waitFor?: string;
   waitTimeout?: number;
   sleep?: number;
+  noRobots?: boolean;
 };
 
 export type ScreenshotResult = {
@@ -100,7 +102,7 @@ export async function captureScreenshot(
   const originalUrl = inputUrl;
   const url = normalizeUrl(inputUrl);
   const preflight = await measureStage(logger, 'screenshot.preflight', telemetry, async () => {
-    return await allowByRobots(url, config.crawl.respectRobots);
+    return await allowByRobots(url, options.noRobots ? false : config.crawl.respectRobots);
   });
   if (!preflight.result.allowed) {
     throw new Error(preflight.result.reason ?? 'robots denied');
@@ -165,7 +167,7 @@ export async function renderPdf(
   const originalUrl = inputUrl;
   const url = normalizeUrl(inputUrl);
   const preflight = await measureStage(logger, 'pdf.preflight', telemetry, async () => {
-    return await allowByRobots(url, config.crawl.respectRobots);
+    return await allowByRobots(url, options.noRobots ? false : config.crawl.respectRobots);
   });
   if (!preflight.result.allowed) {
     throw new Error(preflight.result.reason ?? 'robots denied');

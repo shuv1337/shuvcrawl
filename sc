@@ -142,6 +142,8 @@ def cmd_scrape(args):
         options["noBpc"] = True
     if args.no_cache:
         options["noCache"] = True
+    if args.no_robots:
+        options["noRobots"] = True
     if args.mobile:
         options["mobile"] = True
     if args.debug_artifacts:
@@ -226,6 +228,8 @@ def cmd_map(args):
         options["noFastPath"] = True
     if args.no_bpc:
         options["noBpc"] = True
+    if args.no_robots:
+        options["noRobots"] = True
     if args.wait:
         options["wait"] = args.wait
 
@@ -283,6 +287,8 @@ def cmd_crawl(args):
         options["noBpc"] = True
     if args.no_cache:
         options["noCache"] = True
+    if args.no_robots:
+        options["noRobots"] = True
     if args.debug_artifacts:
         options["debugArtifacts"] = True
     if args.wait:
@@ -384,6 +390,8 @@ def cmd_screenshot(args):
         options["waitTimeout"] = args.wait_timeout
     if args.sleep:
         options["sleep"] = args.sleep
+    if args.no_robots:
+        options["noRobots"] = True
 
     body = {"url": args.url}
     if options:
@@ -428,6 +436,8 @@ def cmd_pdf(args):
         options["format"] = args.format
     if args.landscape:
         options["landscape"] = True
+    if args.no_robots:
+        options["noRobots"] = True
     if args.wait:
         options["wait"] = args.wait
 
@@ -537,6 +547,7 @@ def build_parser():
     sp.add_argument("--no-fast-path", action="store_true", help="Force browser rendering")
     sp.add_argument("--no-bpc", action="store_true", help="Disable Bypass Paywalls Clean")
     sp.add_argument("--no-cache", action="store_true", help="Bypass cache")
+    sp.add_argument("--no-robots", action="store_true", help="Ignore robots.txt")
     sp.add_argument("--mobile", action="store_true", help="Emulate mobile viewport")
     sp.add_argument("--debug-artifacts", action="store_true", help="Save debug artifacts")
     sp.add_argument("--header", action="append", metavar="KEY=VALUE", help="Custom header (repeatable)")
@@ -551,6 +562,7 @@ def build_parser():
     mp.add_argument("--no-same-origin", action="store_true", help="Allow cross-origin URLs")
     mp.add_argument("--no-fast-path", action="store_true", help="Force browser rendering")
     mp.add_argument("--no-bpc", action="store_true", help="Disable BPC")
+    mp.add_argument("--no-robots", action="store_true", help="Ignore robots.txt")
     mp.add_argument("--wait", choices=["load", "networkidle", "selector", "sleep"], help="Wait strategy")
 
     # crawl
@@ -566,6 +578,7 @@ def build_parser():
     cp.add_argument("--no-fast-path", action="store_true", help="Force browser rendering")
     cp.add_argument("--no-bpc", action="store_true", help="Disable BPC")
     cp.add_argument("--no-cache", action="store_true", help="Bypass cache")
+    cp.add_argument("--no-robots", action="store_true", help="Ignore robots.txt")
     cp.add_argument("--debug-artifacts", action="store_true", help="Save debug artifacts")
     cp.add_argument("--wait", choices=["load", "networkidle", "selector", "sleep"], help="Wait strategy")
     cp.add_argument("--poll", action="store_true", help="Poll until job completes")
@@ -587,6 +600,7 @@ def build_parser():
     ss.add_argument("--wait-for", help="CSS selector to wait for")
     ss.add_argument("--wait-timeout", type=int, help="Wait timeout in ms")
     ss.add_argument("--sleep", type=int, help="Sleep ms after page load")
+    ss.add_argument("--no-robots", action="store_true", help="Ignore robots.txt")
     ss.add_argument("-o", "--output", help="Save screenshot to file")
 
     # pdf
@@ -594,6 +608,7 @@ def build_parser():
     pp.add_argument("url", help="URL to render")
     pp.add_argument("--format", choices=["A4", "Letter", "Legal", "Tabloid"], help="Page format (default: A4)")
     pp.add_argument("--landscape", action="store_true", help="Landscape orientation")
+    pp.add_argument("--no-robots", action="store_true", help="Ignore robots.txt")
     pp.add_argument("--wait", choices=["load", "networkidle", "selector", "sleep"], help="Wait strategy")
     pp.add_argument("-o", "--output", help="Save PDF to file")
 

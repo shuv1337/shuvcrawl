@@ -7,6 +7,7 @@ export const ScrapeRequestSchema = z.object({
     noFastPath: z.boolean().optional(),
     noBpc: z.boolean().optional(),
     noCache: z.boolean().optional(),
+    noRobots: z.boolean().optional(),
     mobile: z.boolean().optional(),
     proxy: z.string().nullable().optional(),
     debugArtifacts: z.boolean().optional(),
@@ -27,6 +28,7 @@ export const MapRequestSchema = z.object({
   options: z.object({
     noFastPath: z.boolean().optional(),
     noBpc: z.boolean().optional(),
+    noRobots: z.boolean().optional(),
     include: z.array(z.string()).optional(),
     exclude: z.array(z.string()).optional(),
     sameOriginOnly: z.boolean().optional(),
@@ -52,6 +54,7 @@ export const CrawlRequestSchema = z.object({
     noFastPath: z.boolean().optional(),
     noBpc: z.boolean().optional(),
     noCache: z.boolean().optional(),
+    noRobots: z.boolean().optional(),
     debugArtifacts: z.boolean().optional(),
     // Wait strategies
     wait: z.enum(['load', 'networkidle', 'selector', 'sleep']).optional(),
@@ -65,6 +68,7 @@ export const ScreenshotRequestSchema = z.object({
   url: z.string().url(),
   options: z.object({
     fullPage: z.boolean().optional(),
+    noRobots: z.boolean().optional(),
     // Wait strategies
     wait: z.enum(['load', 'networkidle', 'selector', 'sleep']).optional(),
     waitFor: z.string().optional(),
@@ -78,6 +82,7 @@ export const PdfRequestSchema = z.object({
   options: z.object({
     format: z.string().optional(),
     landscape: z.boolean().optional(),
+    noRobots: z.boolean().optional(),
     // Wait strategies
     wait: z.enum(['load', 'networkidle', 'selector', 'sleep']).optional(),
     waitFor: z.string().optional(),

@@ -22,6 +22,7 @@ export type MapOptions = {
   waitFor?: string;
   waitTimeout?: number;
   sleep?: number;
+  noRobots?: boolean;
 };
 
 export type MapResult = {
@@ -95,7 +96,7 @@ export async function mapUrl(
   });
 
   const preflight = await measureStage(logger, 'map.preflight', telemetry, async () => {
-    return await allowByRobots(url, config.crawl.respectRobots);
+    return await allowByRobots(url, options.noRobots ? false : config.crawl.respectRobots);
   });
   if (!preflight.result.allowed) {
     throw new Error(preflight.result.reason ?? 'robots denied');

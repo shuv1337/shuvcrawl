@@ -31,6 +31,7 @@ export type ScrapeOptions = {
   headers?: Record<string, string | number | boolean>;
   rawHtml?: boolean;
   onlyMainContent?: boolean;
+  noRobots?: boolean;
 };
 
 export type ScrapeResult = {
@@ -128,7 +129,7 @@ export async function scrapeUrl(
   });
 
   const preflight = await measureStage(logger, 'scrape.preflight', telemetry, async () => {
-    return await allowByRobots(url, config.crawl.respectRobots);
+    return await allowByRobots(url, options.noRobots ? false : config.crawl.respectRobots);
   });
   if (!preflight.result.allowed) {
     throw new Error(preflight.result.reason ?? 'robots denied');
