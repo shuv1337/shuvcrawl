@@ -185,7 +185,6 @@ export function startOtlpExporter(
     }
 
     activeExporter = { endpoint, serviceName, version };
-    void flushSpans(endpoint, serviceName, version);
     flushInterval = setInterval(() => {
       void flushSpans(endpoint, serviceName, version);
     }, flushIntervalMs);

@@ -40,6 +40,8 @@ bun run pdf -- https://example.com --json
 ```bash
 docker compose up -d
 curl http://localhost:3777/health
+# If SHUVCRAWL_API_TOKEN is set:
+# curl -H "Authorization: Bearer <token>" http://localhost:3777/health
 ```
 
 ## CLI Reference

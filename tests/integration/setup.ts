@@ -111,6 +111,10 @@ export async function createIntegrationConfig(tmpDir: string): Promise<Shuvcrawl
       templateProfile: path.join(browserDir, 'template'),
       runtimeProfile: path.join(browserDir, 'runtime'),
       resetOnStart: true,
+      native: {
+        enabled: false,
+        wsEndpoint: 'ws://host.docker.internal:9224',
+      },
     },
     bpc: {
       enabled: true,

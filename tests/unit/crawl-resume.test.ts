@@ -43,6 +43,10 @@ function createMockConfig(outputDir: string): ShuvcrawlConfig {
       templateProfile: '~/.shuvcrawl/browser/template',
       runtimeProfile: '~/.shuvcrawl/browser/runtime',
       resetOnStart: false,
+      native: {
+        enabled: false,
+        wsEndpoint: 'ws://host.docker.internal:9224',
+      },
     },
     bpc: {
       enabled: true,

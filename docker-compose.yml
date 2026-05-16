@@ -22,7 +22,11 @@ services:
       - seccomp:unconfined
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:3777/health"]
+      test:
+        [
+          "CMD-SHELL",
+          "if [ -n \"$$SHUVCRAWL_API_TOKEN\" ]; then curl -sf -H \"Authorization: Bearer $$SHUVCRAWL_API_TOKEN\" http://localhost:3777/health >/dev/null; else curl -sf http://localhost:3777/health >/dev/null; fi",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3

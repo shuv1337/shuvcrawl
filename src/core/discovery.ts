@@ -1,13 +1,31 @@
+import { createHash } from 'node:crypto';
 import { JSDOM } from 'jsdom';
 import type { Logger } from '../utils/logger.ts';
 
 export type LinkSource = 'page' | 'sitemap';
+
+export type BlockRole =
+  | 'main_content'
+  | 'related_content'
+  | 'nav'
+  | 'footer'
+  | 'share'
+  | 'social'
+  | 'auth'
+  | 'legal'
+  | 'promo'
+  | 'catalog'
+  | 'unknown';
 
 export type DiscoveredUrl = {
   url: string;
   source: LinkSource;
   text: string | null;
   rel: string | null;
+  context?: string | null;
+  domPath?: string | null;
+  blockSignature?: string | null;
+  blockRole?: BlockRole | null;
 };
 
 export function discoverPageLinks(html: string, baseUrl: string): DiscoveredUrl[] {
@@ -26,11 +44,20 @@ export function discoverPageLinks(html: string, baseUrl: string): DiscoveredUrl[
       const normalized = normalizeDiscoveredUrl(resolved.toString());
       if (!normalized || seen.has(normalized)) continue;
       seen.add(normalized);
+
+      const domPath = computeDomPath(anchor);
+      const blockRoot = findBlockRoot(anchor, document.body ?? document.documentElement);
+      const blockRole = inferBlockRole(anchor, blockRoot);
+      const blockSignature = computeBlockSignature(baseUrl, blockRoot, blockRole);
       results.push({
         url: normalized,
         source: 'page',
         text: anchor.textContent?.trim() || null,
         rel: anchor.getAttribute('rel'),
+        context: extractAnchorContext(anchor, blockRoot),
+        domPath,
+        blockSignature,
+        blockRole,
       });
     } catch {
       continue;
@@ -90,6 +117,122 @@ export function shouldIncludeUrl(
   }
 
   return { included: true };
+}
+
+const BLOCK_TAGS = new Set(['main', 'article', 'nav', 'footer', 'header', 'aside', 'section', 'div', 'ul', 'ol']);
+
+function compactWhitespace(value: string): string {
+  return value.replace(/\s+/g, ' ').trim();
+}
+
+function truncate(value: string, maxChars: number): string {
+  return value.length <= maxChars ? value : `${value.slice(0, Math.max(0, maxChars - 1)).trimEnd()}…`;
+}
+
+function computeDomPath(element: Element): string {
+  const parts: string[] = [];
+  let current: Element | null = element;
+
+  while (current && current.tagName.toLowerCase() !== 'html' && parts.length < 8) {
+    const tag = current.tagName.toLowerCase();
+    const id = current.id ? `#${current.id}` : '';
+    const classes = [...current.classList].slice(0, 2).join('.');
+    const classPart = classes ? `.${classes}` : '';
+    parts.push(`${tag}${id}${classPart}`);
+    current = current.parentElement;
+  }
+
+  return parts.reverse().join('/');
+}
+
+function findBlockRoot(anchor: Element, fallback: Element): Element {
+  let current: Element | null = anchor;
+  while (current && current !== fallback) {
+    if (BLOCK_TAGS.has(current.tagName.toLowerCase())) {
+      return current;
+    }
+    current = current.parentElement;
+  }
+  return fallback;
+}
+
+function collectTokens(anchor: Element, blockRoot: Element): string[] {
+  const tokens = new Set<string>();
+  let current: Element | null = anchor;
+  let depth = 0;
+
+  while (current && depth < 6) {
+    tokens.add(current.tagName.toLowerCase());
+    if (current.id) tokens.add(current.id.toLowerCase());
+    for (const cls of current.classList) tokens.add(cls.toLowerCase());
+    if (current === blockRoot) break;
+    current = current.parentElement;
+    depth += 1;
+  }
+
+  return [...tokens.values()];
+}
+
+function inferBlockRole(anchor: Element, blockRoot: Element): BlockRole {
+  const tokens = collectTokens(anchor, blockRoot);
+  const joined = tokens.join(' ');
+  const href = anchor.getAttribute('href')?.toLowerCase() ?? '';
+  const linkCount = blockRoot.querySelectorAll('a[href]').length;
+
+  if (/(share|sharing|facebook|twitter|linkedin|mastodon|bluesky|reddit|hacker-news|whatsapp|telegram)/.test(joined) || /(?:facebook|twitter|linkedin|bsky|reddit|whatsapp|telegram)\.com|^https?:\/\/x\.com\//.test(href)) {
+    return joined.includes('social') ? 'social' : 'share';
+  }
+
+  if (/(login|sign-?in|signin|sign-?up|signup|register|account|session|auth|oauth)/.test(joined) || /(login|signin|signup|register|account|session|auth)/.test(href)) {
+    return 'auth';
+  }
+
+  if (/(footer|copyright|privacy|terms|cookie|legal)/.test(joined)) {
+    return joined.includes('footer') ? 'footer' : 'legal';
+  }
+
+  if (/(nav|menu|navbar|breadcrumb|breadcrumbs|sidebar|masthead|header)/.test(joined)) {
+    return 'nav';
+  }
+
+  if (/(promo|sponsor|banner|advert|advertisement|marketing|cta|hero)/.test(joined)) {
+    return 'promo';
+  }
+
+  if (/(related|recommended|read-next|more-stories|next-post|similar)/.test(joined)) {
+    return 'related_content';
+  }
+
+  if (blockRoot.tagName.toLowerCase() === 'main' || blockRoot.tagName.toLowerCase() === 'article') {
+    return 'main_content';
+  }
+
+  if (linkCount >= 24) {
+    return 'catalog';
+  }
+
+  return 'unknown';
+}
+
+function computeBlockSignature(baseUrl: string, blockRoot: Element, blockRole: BlockRole): string {
+  const host = new URL(baseUrl).host.toLowerCase();
+  const blockPath = computeDomPath(blockRoot);
+  const blockShape = [
+    blockRoot.tagName.toLowerCase(),
+    blockRoot.id || '',
+    [...blockRoot.classList].slice(0, 4).join('.'),
+    String(blockRoot.querySelectorAll('a[href]').length),
+  ].join('|');
+  const hash = createHash('sha1').update(`${blockPath}|${blockShape}|${blockRole}`).digest('hex').slice(0, 12);
+  return `host:${host}:block:${hash}`;
+}
+
+function extractAnchorContext(anchor: Element, blockRoot: Element): string | null {
+  const direct = compactWhitespace(anchor.parentElement?.textContent ?? '');
+  if (direct) return truncate(direct, 240);
+
+  const block = compactWhitespace(blockRoot.textContent ?? '');
+  return block ? truncate(block, 240) : null;
 }
 
 // Sitemap parsing functions

@@ -45,6 +45,8 @@ bun run test:all
 ```bash
 bun run serve -- --port 3777
 curl http://localhost:3777/health
+# If SHUVCRAWL_API_TOKEN is set:
+# curl -H "Authorization: Bearer <token>" http://localhost:3777/health
 ```
 
 ### Docker
@@ -52,6 +54,8 @@ curl http://localhost:3777/health
 ```bash
 docker compose up -d --build
 curl http://localhost:3777/health
+# If SHUVCRAWL_API_TOKEN is set:
+# curl -H "Authorization: Bearer <token>" http://localhost:3777/health
 docker compose logs -f shuvcrawl
 docker compose down
 ```
