@@ -2,6 +2,12 @@
 
 Self-hosted web scraping toolkit combining [Patchright](https://github.com/nicehash/patchright) (undetected Playwright) with the [Bypass Paywalls Clean](https://github.com/nicehash/bypass-paywalls-chrome-clean) (BPC) extension. Extracts article content as clean markdown + structured JSON. CLI, REST API, and Docker deployment.
 
+<img src="assets/architecture.svg" alt="shuvcrawl crawl pipeline architecture" width="100%">
+
+![shuvcrawl API health response](assets/api-health.png)
+
+![shuvcrawl CLI crawl progression](assets/crawl-progress.gif)
+
 ## Quick Start
 
 ### Local

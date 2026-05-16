@@ -1,0 +1,74 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1240 700" role="img" aria-labelledby="title desc">
+  <title id="title">shuvcrawl crawler architecture</title>
+  <desc id="desc">Diagram of CLI and REST API requests flowing into scrape, map, crawl, and capture engines backed by browser pool, BPC extension, storage, cache, and job persistence.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#082f49"/>
+      <stop offset="100%" stop-color="#064e3b"/>
+    </linearGradient>
+    <marker id="arrow" markerWidth="12" markerHeight="12" refX="10" refY="6" orient="auto">
+      <path d="M2,2 L10,6 L2,10 Z" fill="#38bdf8"/>
+    </marker>
+    <style>
+      .title { fill: #f8fafc; font: 800 34px system-ui, sans-serif; }
+      .subtitle { fill: #ccfbf1; font: 500 18px system-ui, sans-serif; }
+      .box { fill: #f8fafc; stroke: #67e8f9; stroke-width: 2; rx: 18; }
+      .engine { fill: #ecfeff; stroke: #06b6d4; stroke-width: 2; rx: 18; }
+      .store { fill: #fef9c3; stroke: #facc15; stroke-width: 2; rx: 16; }
+      .label { fill: #0f172a; font: 750 21px system-ui, sans-serif; }
+      .small { fill: #334155; font: 500 15px system-ui, sans-serif; }
+      .code { fill: #d1fae5; font: 600 15px ui-monospace, SFMono-Regular, Menlo, monospace; }
+      .flow { stroke: #38bdf8; stroke-width: 4; fill: none; marker-end: url(#arrow); }
+      .thin { stroke: #99f6e4; stroke-width: 2.5; fill: none; marker-end: url(#arrow); }
+    </style>
+  </defs>
+  <rect width="1240" height="700" fill="url(#bg)"/>
+  <text x="70" y="70" class="title">shuvcrawl crawl pipeline</text>
+  <text x="70" y="102" class="subtitle">CLI, REST API, browser automation, extraction, crawl jobs, and artifact storage</text>
+  <rect x="70" y="160" width="180" height="116" class="box"/>
+  <text x="110" y="202" class="label">CLI</text>
+  <text x="105" y="232" class="small">scrape, map</text>
+  <text x="105" y="256" class="small">crawl, capture</text>
+  <rect x="70" y="340" width="180" height="116" class="box"/>
+  <text x="105" y="382" class="label">REST API</text>
+  <text x="105" y="412" class="small">Hono routes</text>
+  <text x="105" y="436" class="small">auth + schemas</text>
+  <rect x="335" y="250" width="210" height="126" class="engine"/>
+  <text x="372" y="296" class="label">Engine</text>
+  <text x="372" y="326" class="small">request config</text>
+  <text x="372" y="350" class="small">telemetry + errors</text>
+  <rect x="630" y="130" width="220" height="116" class="box"/>
+  <text x="665" y="173" class="label">Fast path</text>
+  <text x="665" y="203" class="small">fetch HTML</text>
+  <text x="665" y="227" class="small">Readability accept</text>
+  <rect x="630" y="290" width="220" height="126" class="box"/>
+  <text x="665" y="336" class="label">Browser path</text>
+  <text x="665" y="366" class="small">Patchright Chromium</text>
+  <text x="665" y="390" class="small">BPC extension</text>
+  <rect x="930" y="130" width="220" height="116" class="box"/>
+  <text x="965" y="173" class="label">Extract</text>
+  <text x="965" y="203" class="small">main content</text>
+  <text x="965" y="227" class="small">markdown + JSON</text>
+  <rect x="930" y="290" width="220" height="126" class="box"/>
+  <text x="965" y="336" class="label">Map / crawl</text>
+  <text x="965" y="366" class="small">links + sitemap</text>
+  <text x="965" y="390" class="small">BFS queue</text>
+  <rect x="335" y="500" width="230" height="112" class="store"/>
+  <text x="372" y="542" class="label">Job state</text>
+  <text x="372" y="572" class="small">SQLite persistence</text>
+  <text x="372" y="596" class="small">resume + cancel</text>
+  <rect x="650" y="500" width="230" height="112" class="store"/>
+  <text x="687" y="542" class="label">Storage</text>
+  <text x="687" y="572" class="small">output/, cache/</text>
+  <text x="687" y="596" class="small">artifacts, PDFs, PNGs</text>
+  <path d="M250 218 C290 218 300 313 335 313" class="flow"/>
+  <path d="M250 398 C290 398 300 313 335 313" class="flow"/>
+  <path d="M545 313 C585 250 590 188 630 188" class="flow"/>
+  <path d="M545 313 H630" class="flow"/>
+  <path d="M850 188 H930" class="flow"/>
+  <path d="M850 353 H930" class="flow"/>
+  <path d="M1040 416 C980 475 820 500 765 500" class="thin"/>
+  <path d="M440 376 V500" class="thin"/>
+  <path d="M740 416 V500" class="thin"/>
+  <text x="70" y="655" class="code">bun run crawl -- http://localhost:4455/links.html --depth 1 --limit 3 --json</text>
+</svg>
