@@ -1,7 +1,7 @@
 //"use strict";
 
 var it_ilmessaggero_domains = ['corriereadriatico.it', 'ilgazzettino.it', 'ilmattino.it', 'ilmessaggero.it', 'quotidianodipuglia.it'];
-var it_gedi_domains = ['italian.tech', 'lastampa.it', 'lescienze.it', 'moda.it', 'repubblica.it'];
+var it_gedi_domains = ['italian.tech', 'lastampa.it', 'lescienze.it', 'repubblica.it'];
 var it_quotidiano_domains = ['ilgiorno.it', 'ilrestodelcarlino.it', 'iltelegrafolivorno.it', 'lanazione.it', 'quotidiano.net'];
 
 cs_default = function (bg2csData = '') {
@@ -127,13 +127,15 @@ else if (matchDomain('ilfattoquotidiano.it')) {
 }
 
 else if (matchDomain('ilfoglio.it')) {
-  if (window.location.pathname.endsWith('/amp/')) {
-    amp_unhide_subscr_section('amp-ad, [class^="adv-"], div#gmpVideoContainer');
-  } else {
-    amp_redirect('div.paywall');
-    let ads = '.advertisement';
-    hideDOMStyle(ads);
+  let paywall = document.querySelector('div.paywall');
+  if (paywall) {
+    removeDOMElement(paywall);
+    let div_hidden = document.querySelector('div.paywall-wrapper__story-content');
+    if (div_hidden)
+      div_hidden.removeAttribute('class');
   }
+  let ads = '.advertisement';
+  hideDOMStyle(ads);
 }
 
 else if (matchDomain('ilmanifesto.it')) {
@@ -219,13 +221,12 @@ else if (matchDomain('italiaoggi.it')) {
 
 else if (domain = matchDomain(it_gedi_domains)) {
   let amp = window.location.pathname.match(/\/amp(\/)?$/);
-  if (matchDomain(['lastampa.it'])) {
+  if (matchDomain('lastampa.it')) {
     if (window.location.pathname.includes('/news/')) {
       if (!amp) {
-        csDoneOnce = true;
         let paywall = document.querySelector('iframe[id^="__limio_frame"]');
         if (paywall) {
-          ext_api.runtime.sendMessage({request: 'clear_cookies_domain', data: {domain: domain}});
+          removeDOMElement(paywall);
           refreshCurrentTab(false);
         }
         let modal = document.querySelector('aside#widgetDP');
@@ -287,6 +288,11 @@ else if (matchDomain('milanofinanza.it')) {
   }
 }
 
+else if (matchDomain('nationalgeographic.it')) {
+  document.querySelectorAll('section[style]').forEach(e => e.removeAttribute('style'));
+  hideDOMStyle('section.paywall-container');
+}
+
 else if (matchDomain('sky.it')) {
   let paywall = document.querySelector('div.c-paywall');
   if (paywall && window.location.hostname.match(/^(sport|tg24)\./)) {
@@ -343,6 +349,11 @@ else if (matchDomain('tuttosport.com')) {
     let ads = 'div[class^="AdUnit_"]';
     hideDOMStyle(ads);
   }
+}
+
+else if (matchDomain('vanityfair.it')) {
+  let ads = 'div.ad';
+  hideDOMStyle(ads);
 }
 
 else

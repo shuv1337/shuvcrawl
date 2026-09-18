@@ -1,7 +1,20 @@
 //'use strict';
 var ext_api = (typeof browser === 'object') ? browser : chrome;
 
-{
+if (matchDomain('gitflic.ru')) {
+  if (window.location.pathname.startsWith('/project/magnolia1234/bpc_uploads') && document.head) {
+    let sheet = document.createElement('style');
+    let path_short = window.location.pathname.replace('/project/magnolia1234/bpc_uploads', '');
+    if (!path_short)
+      sheet.innerText = 'div[data-cell-type="commit"], div[data-cell-type="date"] {display: none !important;} div[data-cell-type="filename"] {flex: 0 0 100% !important;}';
+    else if (path_short.match(/^\/(blob|file)/))
+      sheet.innerText = 'div.project-files-tree, div.project-files-list {flex: 0 0 50% !important; max-width: 50% !important;}';
+    if (sheet.innerText)
+      document.head.appendChild(sheet);
+  }
+}
+
+else {
 
 window.setTimeout(function () {
   let hostname = window.location.hostname.replace(/^www\./, '');
@@ -34,7 +47,7 @@ window.setTimeout(function () {
       group = '###_uk_haymarket_medical';
     else if (matchDomain(['asianinvestor.net', 'campaignindia.in', 'taspo.de']) || (hostname.match(/\.co(m|\.uk)$/) && document.querySelector('footer a[href^="http://www.haymarket.com"]')))
       group = '###_uk_haymarket';
-    else if (matchDomain(['epochtimes-romania.com']) || hostname.match(/\.epochtimes\.(com\.br|cz|de|fr|jp)/))
+    else if (hostname.match(/^epochtimes\.(cz|de|fr|jp)/))
       group = '###_usa_epochtimes';
     else if (hostname.match(/\.(com|net)\.au$/) && !matchDomain(['insideretail.com.au'])) {
       if (document.querySelector('div#footer a[href^="https://acm.media/"]'))
@@ -63,7 +76,7 @@ window.setTimeout(function () {
         nofix = 1;
       }
     } else if (hostname.match(/\.(de|at|ch)$/) || matchDomain(['fashionmagazine.it', 'foodservice24.pl', 'handelextra.pl', 'horizont.net', 'lebensmittelzeitung.net', 'mmponline.pl', 'textiletechnology.net'])) {
-      if (document.querySelector('head > script[src*="/dfv.containers.piwik.pro/"]'))
+      if (document.querySelector('head > meta[name="tdm-policy"][content^="https://www.dfv.de"]'))
         group = '###_de_dfv_medien';
       else if (hostname.endsWith('.de')) {
         if (matchDomain(['bergstraesser-anzeiger.de', 'fnweb.de', 'mannheimer-morgen.de', 'schwetzinger-zeitung.de'])) {
@@ -95,7 +108,10 @@ window.setTimeout(function () {
     } else if (hostname.match(/\.(es|cat)$/) || matchDomain(['diariocordoba.com', 'elperiodicodearagon.com', 'elperiodicoextremadura.com', 'elperiodicomediterraneo.com', 'emporda.info'])) {
       if (document.querySelector('head > link[href*="/estaticos-cdn."]'))
         group = '###_es_epiberica';
-      else if (document.querySelector('div > ul > li > a[href="https://www.sportlife.es/"]'))
+      else if (document.querySelector('head > meta[property="og:image"][content^="https://static.grupojoly.com/"]')) {
+        if (document.querySelector('header.pooolPaywallIsEnabled'))
+          group = '###_es_grupo_joly';
+      } else if (document.querySelector('div > ul > li > a[href="https://www.sportlife.es/"]'))
         group = '###_es_sport_life';
     } else if (hostname.endsWith('.fi')) {
       if (document.querySelector('head > link[href^="https://assets.almatalent.fi"]')) {
@@ -126,10 +142,12 @@ window.setTimeout(function () {
       if (document.querySelector('head > meta[name="twitter:creator"][content="@Agrio"]')) {
         group = '###_nl_agrio';
         nofix = 1;
-      } else if (document.querySelector('head > link[href*=".ndcmediagroep.nl/"]'))
-        group = '###_nl_mediahuis_noord';
-      else if (matchDomain(['gooieneemlander.nl', 'ijmuidercourant.nl']))
-        group = '###_nl_mediahuis_region';
+      } else if (document.querySelector('head > script[src^="https://mmcdn.nl/tags/bdu/"]'))
+        group = '###_nl_bdumedia';
+      else if (document.querySelector('head > script[src^="https://mmcdn.nl/tags/entermedia/"]'))
+        group = '###_nl_enter_media';
+      else if (document.querySelector('footer a[href^="https://www.mediahuis.nl/algemene-voorwaarden"]'))
+        group = 'group_nl_mediahuis_regional';
       else if (matchDomain(['bike-eu.com']) || document.querySelector('head > link[rel="dns-prefetch"][href^="https://vmn-"][href$="imgix.net"]'))
         group = '###_nl_vmnmedia';
     } else if (hostname.endsWith('.no')) {
@@ -172,10 +190,10 @@ window.setTimeout(function () {
         group = '###_uk_axate.io';
       else if (matchDomain(['flightglobal.com', 'freightcarbonzero.com', 'heavyliftpfi.com', 'personneltoday.com', 'railwaygazette.com']))
         group = '###_uk_dvv_media';
-      else if (matchDomain(['agendanews.com', 'boardiq.com', 'endpoints.news', 'financialadvisoriq.com', 'fundfire.com', 'healthpayerspecialist.com', 'ignites.com', 'ignitesasia.com', 'igniteseurope.com', 'lifeannuityspecialist.com', 'pandcspecialist.com']))
-        group = '###_uk_ft_specialist';
       else if (document.querySelector('footer a[href^="https://www.newsquest.co.uk/"]'))
         group = '###_uk_newsquest';
+      else if (document.querySelector('footer a[href="https://jobs.reachplc.com/jobs"]'))
+        group = '###_uk_reach';
       else if (document.querySelector('div#wrbm-footer-div'))
         group = '###_uk_william_reed';
       else if (document.querySelector('head > script[src="https://cdn.blueconic.net/bridgetowermedia.js"], header.site-header > div.btm-header'))
@@ -208,12 +226,12 @@ window.setTimeout(function () {
           group = '###_fr_synerj';
         else if (matchDomain(['argusdelassurance.com']))
           group = '###_fr_groupe_infopro';
-        else if (!matchDomain(['delinian.com', 'structuredretailproducts.com']) && document.querySelector('footer a[href^="https://www.delinian.com/privacy-policy"]'))
-          group = '###_uk_delinian'; // custom
+        else if (matchDomain(['iflr.com', 'internationaltaxreview.com', 'managingip.com']))
+          group = '###_uk_legal_benchmarking_group'; // custom
         else if (document.querySelector('footer a[href^="https://www.lbresearch.com"]')) {
           group = '###_uk_law_business_research';
           nofix = 1;
-        } else if (matchDomain(['oed.com']) || (hostname.startsWith('oxford') && document.querySelector('div[id^="footer"] a[href="http://www.oup.com/"]')))
+        } else if (matchDomain(['oed.com']) || (hostname.startsWith('oxford') && document.querySelector('div[id^="footer"] a[href="https://global.oup.com/privacy"]')))
           group = '###_uk_oup';
         else if (document.querySelector('head > meta[property][content^="https://cdn.forumcomm.com/"]'))
           group = '###_usa_forum_comm';

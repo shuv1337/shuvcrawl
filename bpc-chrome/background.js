@@ -37,10 +37,10 @@ var domain;
 // defaultSites are loaded from sites.js at installation extension
 
 var restrictions = {
+  'anandabazar.com': /^((?!\/epaper\.anandabazar\.com\/).)*$/,
   'autohebdo.fr': /\/www\.autohebdo\.fr\//,
-  'bloomberg.com': /^((?!\.bloomberg\.com\/news\/terminal\/).)*$/,
+  'bloomberg.com': /^((?!(\.bloomberg\.com\/news\/terminal\/|(blinks|mercury)\.bloomberg\.com)).)*$/,
   'bloombergadria.com': /^((?!\.bloombergadria\.com\/video\/).)*$/,
-  'dailywire.com': /^((?!\.dailywire\.com\/(episode|show|videos|watch)).)*$/,
   'dn.no': /^((?!\.dn\.no\/dn\/epaper\/).)*$/,
   'economictimes.com': /\.economictimes\.com($|\/($|(__assets|prime)(\/.+)?|.+\.cms))/,
   'espn.com': /^((?!\.espn\.com\/watch).)*$/,
@@ -84,7 +84,7 @@ for (let domain of grouped_sites['###_fr_be_groupe_rossel'])
   restrictions[domain] = new RegExp('^((?!journal\\.' + domain.replace(/\./g, '\\.') + '\\/).)*$');
 
 for (let domain of grouped_sites['###_il_haaretz_group'])
-  restrictions[domain] = /\/ty-article(-\w+)?\//;
+  restrictions[domain] = /\/(ty-article(-\w+)?\/|hblocked)/;
 
 if (ext_chromium) {
   for (let domain of [])
@@ -98,7 +98,7 @@ var remove_cookies = [];
 var remove_cookies_select_hold, remove_cookies_select_drop;
 
 // Set User-Agent/headers
-var use_google_bot, use_bing_bot, use_facebook_bot, use_useragent_custom, use_useragent_custom_obj, use_headers_custom, use_headers_custom_obj;
+var use_google_bot, use_bing_bot, use_facebook_bot, use_useragent_custom, use_useragent_custom_obj, use_headers_custom, use_headers_custom_obj, use_headers_filter, use_headers_filter_obj;
 // Set Referer
 var use_facebook_referer, use_google_referer, use_twitter_referer, use_referer_custom, use_referer_custom_obj;
 // Set random IP-address
@@ -163,6 +163,8 @@ function initSetRules() {
   use_useragent_custom_obj = {};
   use_headers_custom = [];
   use_headers_custom_obj = {};
+  use_headers_filter = [];
+  use_headers_filter_obj = {};
   use_facebook_referer = [];
   use_google_referer = [];
   use_twitter_referer = [];
@@ -177,6 +179,7 @@ function initSetRules() {
   cs_clear_lclstrg = [];
   cs_code = {};
   cs_param = {};
+  dompurify_sites = [];
   ld_json = {};
   ld_json_next = {};
   ld_json_source = {};
@@ -195,10 +198,10 @@ function initSetRules() {
 }
 
 const userAgentDesktopG = "Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)";
-const userAgentMobileG = "Chrome/137.0.7151.119 Mobile Safari/537.36 (compatible ; Googlebot/2.1 ; +http://www.google.com/bot.html)";
+const userAgentMobileG = "Chrome/150.0.0.0 Mobile Safari/537.36 (compatible ; Googlebot/2.1 ; +http://www.google.com/bot.html)";
 
 const userAgentDesktopB = "Mozilla/5.0 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)";
-const userAgentMobileB = "Chrome/137.0.7151.119 Mobile Safari/537.36 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)";
+const userAgentMobileB = "Chrome/150.0.0.0 Mobile Safari/537.36 (compatible; bingbot/2.0; +http://www.bing.com/bingbot.htm)";
 
 const userAgentDesktopF = 'facebookexternalhit/1.1 (+http://www.facebook.com/externalhit_uatext.php)';
 
@@ -227,14 +230,36 @@ function setDefaultOptions() {
 }
 
 function check_sites_updated(sites_updated_json, optin_update = false) {
-  // Remote auto-update disabled
-  return;
+  fetch(sites_updated_json)
+  .then(response => {
+    if (response.ok) {
+      response.json().then(json => {
+        json = filterObject(json, function (val, key) {
+          let domain_filter = [];
+          return (val.domain && !domain_filter.includes(val.domain) && !(val.upd_version && (val.upd_version <= ext_version)) && !(val.upd_version_min && (val.upd_version_min > ext_version)))
+        });
+        expandSiteRules(json, true);
+        ext_api.storage.local.set({
+          sites_updated: json
+        });
+        if (!optin_update) {
+          let updated_ext_version_new = Object.values(json).map(x => x.upd_version || '').sort().pop();
+          if (updated_ext_version_new) {
+            ext_api.management.getSelf(function (result) {
+              if (result.installType === 'development')
+                setExtVersionNew(updated_ext_version_new);
+            })
+          }
+        }
+      })
+    }
+  }).catch(err => false);
 }
 
-var ext_path = '';
+var ext_path = 'https://gitflic.ru/project/magnolia1234/bpc_updates/blob/raw?file=';
 var sites_updated_json = 'sites_updated.json';
-var sites_updated_json_online = '';
-var self_hosted = false;
+var sites_updated_json_online = ext_path + sites_updated_json;
+var self_hosted = !!(manifestData.update_url || (manifestData.browser_specific_settings && manifestData.browser_specific_settings.gecko.update_url));
 
 function clear_sites_updated() {
   ext_api.storage.local.set({
@@ -278,7 +303,7 @@ update_session_rules = function (rules, rule_ids) {
   }, );
 }
 
-add_session_rule = function (domain, rule, blockedRegexes_rule = '', blockedRegexesGeneral_rule = '', blockedJsInline_rule = '') {
+add_session_rule = function (domain, rule, blockedRegexes_rule = '', blockedRegexesGeneral_rule = '', blockedJsInline_rule = '', use_headers_filter_obj_rule = '') {
   function regexToUrlFilter(rule, regex, domain) {
     let urlFilter;
     if (!(regex.match(/([([|*{$\^]|\\[a-z\?])/) || regex.match(/([^\.]|\\\.)\+/))) {
@@ -357,6 +382,10 @@ add_session_rule = function (domain, rule, blockedRegexes_rule = '', blockedRege
         "resourceTypes": ["script", "xmlhttprequest"]
       }
     };
+    if (domain === 'bloomberg.com')
+      block_rule.condition.resourceTypes = block_rule.condition.resourceTypes.concat(["stylesheet"]);  
+    else if (domain === 'thehindu.com')
+      block_rule.condition.initiatorDomains = ['www.thehindu.com'];
     regexToUrlFilter(block_rule, rule_regex, domain);
     push_session_rule(block_rule, rule_id);
   }
@@ -399,7 +428,7 @@ add_session_rule = function (domain, rule, blockedRegexes_rule = '', blockedRege
         "resourceTypes": ["main_frame", "sub_frame", "xmlhttprequest", "script"]
       }
     };
-    
+
     if (['economist.com'].includes(domain))
       header_rule.condition.resourceTypes = header_rule.condition.resourceTypes.concat(["stylesheet", "image", "media"]);
     
@@ -418,16 +447,18 @@ add_session_rule = function (domain, rule, blockedRegexes_rule = '', blockedRege
     let userAgentB = useUserAgentMobile ? userAgentMobileB : userAgentDesktopB;
     
     if (rule.useragent || rule.useragent_custom || rule.headers_custom) {
+      if (rule.headers_filter) {
+        header_rule.condition.initiatorDomains = [domain]; // not working consistently (for all other sites)
+        let filter_regex = use_headers_filter_obj_rule;
+        if (filter_regex instanceof RegExp)
+          filter_regex = filter_regex.source;
+        delete header_rule.condition.urlFilter;
+        header_rule.condition.regexFilter = filter_regex;
+        regexToUrlFilter(header_rule, filter_regex, domain);
+      }
       if (rule.useragent === 'googlebot') {
-        let googlebotEnabled = !(grouped_sites['###_es_grupo_vocento'].includes(domain) && mobile);
+        let googlebotEnabled = true;
         if (googlebotEnabled) {
-          if (['economictimes.com', 'economictimes.indiatimes.com'].includes(domain)) {
-            header_rule.condition.urlFilter = '||' + domain + '/*.cms';
-          } else if (domain === 'handelsblatt.com') {
-            header_rule.condition.urlFilter = '||' + domain + '/*.html';
-          } else if (domain === 'leparisien.fr') {
-            header_rule.condition.urlFilter = '||www.' + domain;
-          }
           header_rule.action.requestHeaders.push({
             "header": "User-Agent",
             "operation": "set",
@@ -637,13 +668,27 @@ function addRules(domain, rule, flex = false) {
       break;
     }
   } else if (rule.useragent_custom || rule.headers_custom) {
-    if (!use_useragent_custom.includes(domain)) {
+    if (rule.useragent_custom && !use_useragent_custom.includes(domain)) {
       use_useragent_custom.push(domain);
       use_useragent_custom_obj[domain] = rule.useragent_custom;
     }
-    if (!use_headers_custom.includes(domain)) {
+    if (rule.headers_custom && !use_headers_custom.includes(domain)) {
       use_headers_custom.push(domain);
       use_headers_custom_obj[domain] = rule.headers_custom;
+    }
+  }
+  if (rule.headers_filter) {
+    if (!use_headers_filter.includes(domain)) {
+      use_headers_filter.push(domain);
+      if (rule.headers_filter instanceof RegExp)
+        use_headers_filter_obj[domain] = rule.headers_filter;
+      else {
+        try {
+          use_headers_filter_obj[domain] = new RegExp(prep_regex_str(rule.headers_filter, domain));
+        } catch (e) {
+          console.log(`regex not valid, error: ${e}`);
+        }
+      }
     }
   }
   if (rule.referer) {
@@ -717,7 +762,7 @@ function addRules(domain, rule, flex = false) {
 
   if (ext_manifest_version === 3) {
     init_session_rules(false, flex);
-    add_session_rule(domain, rule, blockedRegexes[domain], blockedRegexesGeneral[domain], blockedJsInline[domain]);
+    add_session_rule(domain, rule, blockedRegexes[domain], blockedRegexesGeneral[domain], blockedJsInline[domain], use_headers_filter_obj[domain]);
     if (flex && sesRules.length)
       update_session_rules(sesRules, sesRuleIds);
   }
@@ -971,7 +1016,7 @@ ext_api.storage.local.get({
     } else {
       ext_api.management.getSelf(function (result) {
         if ((result.installType === 'development' || (result.installType !== 'development' && !enabledSites.includes('#options_on_update')))) {
-          let new_groups = ['###_uk_iconic_media', '###_uk_spectator'];
+          let new_groups = ['###_fr_groupe_telegramme', '###_uk_iconic_media'];
           let open_options = new_groups.some(group => !enabledSites.includes(group) && grouped_sites[group].some(domain => enabledSites.includes(domain) && !customSites_domains.includes(domain)));
           if (open_options)
             ext_api.runtime.openOptionsPage();
@@ -992,7 +1037,20 @@ ext_api.storage.local.get({
     rule_excluded_base_domains = disabledSites.filter(x => !x.match(/(^###|_)/) && !gpw_domains.includes(x));
   }
   set_rules(sites, updatedSites, customSites);
-  // Remote auto-update disabled
+  if (enabledSites.includes('#options_optin_update_rules') && self_hosted) {
+    sites_updated_json = sites_updated_json_online;
+    //sites_custom_ext_json = ext_path + 'sites_custom.json';
+  }
+  var ext_update_check = items.ext_update_check;
+  if (!ext_update_check || (Date.now() - ext_update_check > 3 * 60 * 60 * 1000)) {
+    if (optin_update)
+      check_update();
+    check_sites_updated(sites_updated_json, optin_update);
+    check_sites_custom_ext(optin_update);
+    ext_api.storage.local.set({
+      ext_update_check: Date.now()
+    });
+  }
   setTimeout(function () {
   if (!Object.keys(sites).length)
     ext_api.runtime.openOptionsPage();
@@ -1299,21 +1357,21 @@ if (ext_chromium) {
     let hostname = urlHost(url).replace(/^www\./, '');
     if (hostname.match(/^thelocal\.\w{2}/))
       cs_local = 'en';
-    else if (hostname.match(/\.(ar|br|cl|mx|pe|uy)$/) || matchUrlDomain(['abcmais.com', 'clarin.com', 'cronista.com', 'elespectador.com', 'elmercurio.com', 'eltiempo.com', 'eltribuno.com', 'eluniverso.com', 'exame.com', 'globo.com', 'lasegunda.com', 'latercera.com', 'milenio.com', 'revistaoeste.com', 'semana.com'], url))
+    else if (hostname.match(/\.(ar|br|cl|mx|pe|uy)$/) || matchUrlDomain(['abcmais.com', 'clarin.com', 'cronista.com', 'elespectador.com', 'elmercurio.com', 'eltiempo.com', 'eltribuno.com', 'eluniverso.com', 'exame.com', 'globo.com', 'lasegunda.com', 'latercera.com', 'milenio.com', 'nacion.com', 'revistaoeste.com', 'semana.com'], url))
       cs_local = 'es.pt';
-    else if ((hostname.match(/\.(de|at|ch)$/) && !matchUrlDomain(grouped_sites['###_ch_esh_medias'].concat(['letemps.ch']), url)) || matchUrlDomain(['diepresse.com', 'faz.net', 'handelsblatt.com', 'wochenblatt.com'], url))
+    else if ((hostname.match(/\.(de|at|ch)$/) && !matchUrlDomain(grouped_sites['###_ch_esh_medias'].concat(['letemps.ch']), url)) || matchUrlDomain(['diepresse.com', 'faz.net', 'handelsblatt.com', 'ostdeutscheallgemeine.com', 'wochenblatt.com'], url))
       cs_local = 'de';
     else if (hostname.match(/\.(dk|fi|se)$/))
       cs_local = 'fi.se';
     else if (hostname.match(/\.(es|pt|cat)$/) || matchUrlDomain(['diariocordoba.com', 'diariovasco.com', 'elconfidencial.com', 'elcorreo.com', 'elespanol.com', 'elpais.com', 'elperiodico.com', 'elperiodicodearagon.com', 'elperiodicoextremadura.com', 'elperiodicomediterraneo.com', 'emporda.info', 'expansion.com', 'larioja.com', 'lavanguardia.com', 'levante-emv.com', 'marca.com', 'mundodeportivo.com', 'politicaexterior.com'], url))
       cs_local = 'es.pt';
-    else if ((hostname.endsWith('.fr') && !matchUrlDomain(['lemagit.fr'], url)) || matchUrlDomain(['aoc.media', 'bienpublic.com', 'connaissancedesarts.com', 'courrierinternational.com', 'jeuneafrique.com', 'journaldunet.com', 'la-croix.com', 'lecho.be', 'ledauphine.com', 'legrandcontinent.eu', 'lejsl.com', 'lerevenu.com', 'lesinrocks.com', 'lesoir.be', 'letemps.ch', 'linforme.com', 'loeildelaphotographie.com', 'marianne.net', 'parismatch.com', 'philomag.com', 'philonomist.com', 'pourleco.com', 'reforme.net', 'science-et-vie.com', 'sudinfo.be', 'valeursactuelles.com'].concat(grouped_sites['###_be_groupe_ipm'], grouped_sites['###_ch_esh_medias'], grouped_sites['###_fr_groupe_nice_matin']), url))
+    else if (hostname.endsWith('.fr') || matchUrlDomain(['aoc.media', 'bienpublic.com', 'connaissancedesarts.com', 'courrierinternational.com', 'jeuneafrique.com', 'journaldunet.com', 'la-croix.com', 'lecho.be', 'ledauphine.com', 'legrandcontinent.eu', 'lejsl.com', 'lerevenu.com', 'lesinrocks.com', 'lesoir.be', 'letemps.ch', 'linforme.com', 'loeildelaphotographie.com', 'macg.co', 'parismatch.com', 'philomag.com', 'philonomist.com', 'pourleco.com', 'reforme.net', 'science-et-vie.com', 'sudinfo.be', 'valeursactuelles.com'].concat(grouped_sites['###_be_groupe_ipm'], grouped_sites['###_ch_esh_medias'], grouped_sites['###_fr_groupe_nice_matin']), url))
       cs_local = 'fr';
     else if (hostname.endsWith('.it') || matchUrlDomain(['eastwest.eu', 'ilsole24ore.com', 'italian.tech', 'quotidiano.net', 'tuttosport.com'], url))
       cs_local = 'it';
     else if (hostname.match(/\.(nl|be)$/) || matchUrlDomain(['projectcargojournal.com', 'railfreight.cn', 'railfreight.com', 'railtech.com'], url))
       cs_local = 'nl';
-    else if (hostname.match(/\.pl$/) || matchUrlDomain(['parkiet.com', 'wyborcza.biz'], url))
+    else if (hostname.match(/\.(bg|cz|hr|pl|ua)$/) || matchUrlDomain(['oko.press', 'parkiet.com', 'wyborcza.biz'], url))
       cs_local = 'pl';
     let cs_local_file = 'cs_local/contentScript' + '_' + cs_local + '.js';
     for (let n = 0; n < tab_runs; n++) {
@@ -1372,7 +1430,7 @@ if (ext_chromium) {
         }
         } // run cs once
         // remove cookies after page load
-        if (rc_domain_enabled && !['enotes.com', 'investors.com', 'lastampa.it'].includes(rc_domain)) {
+        if (rc_domain_enabled && !['enotes.com', 'investors.com'].includes(rc_domain)) {
           remove_cookies_fn(rc_domain, true);
         }
       }, n * 200);
@@ -1456,7 +1514,7 @@ if (ext_chromium) {
 ext_api.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
   let tab_status = changeInfo.status;
   if (/^http/.test(tab.url)) {
-    if ((tab_status && (tab_status === 'complete' || matchUrlDomain(['startribune.com'].concat(grouped_sites['###_usa_tribune']), tab.url))) || changeInfo.url) {
+    if ((tab_status && (tab_status === 'complete' || matchUrlDomain(['startribune.com'].concat(grouped_sites['###_usa_tribune']), tab.url))) || (!tab_status && changeInfo.url)) {
       let timeout = changeInfo.url ? 500 : 0;
       setTimeout(function () {
         if (isSiteEnabled(tab)) {
@@ -1507,7 +1565,10 @@ ext_api.webRequest.onBeforeSendHeaders.addListener(function(details) {
   }
 
   // check for blocked regular expression: domain enabled, match regex, block on an internal or external regex
-  if (['script', 'xmlhttprequest'].includes(details.type)) {
+  var block_resourcetypes = ['script', 'xmlhttprequest'];
+  if (matchUrlDomain('bloomberg.com', header_referer) && matchUrlDomain('bwbx.io', details.url) && details.type === 'stylesheet')
+    block_resourcetypes = block_resourcetypes.concat(['stylesheet']);
+  if (block_resourcetypes.includes(details.type)) {
     let domain = matchUrlDomain(blockedRegexesDomains, header_referer);
     if (domain && details.url.match(blockedRegexes[domain]) && isSiteEnabled({url: header_referer}))
       return { cancel: true };
@@ -1539,12 +1600,10 @@ var ignore_types = ['font', 'image', 'stylesheet'];
 
 if (matchUrlDomain(change_headers, details.url) && !ignore_types.includes(details.type)) {
   var mobile = details.requestHeaders.filter(x => x.name.toLowerCase() === "user-agent" && x.value.toLowerCase().includes("mobile")).length;
+  var headers_filter_domain = matchUrlDomain(use_headers_filter, details.url);
   var googlebotEnabled = matchUrlDomain(use_google_bot, details.url) && 
-    !(matchUrlDomain(grouped_sites['###_es_grupo_vocento'], details.url) && mobile) &&
-    !(matchUrlDomain(['economictimes.com', 'economictimes.indiatimes.com'], details.url) && !details.url.split(/[\?#]/)[0].endsWith('.cms')) &&
-    !(matchUrlDomain('handelsblatt.com', details.url) && !details.url.split(/[\?#]/)[0].endsWith('.html')) &&
     !(matchUrlDomain('nytimes.com', details.url) && details.url.includes('.nytimes.com/live/')) &&
-    !(matchUrlDomain('uol.com.br', details.url) && !matchUrlDomain('folha.uol.com.br', details.url));
+    !(headers_filter_domain && !details.url.match(use_headers_filter_obj[headers_filter_domain]));
   var bingbotEnabled = matchUrlDomain(use_bing_bot, details.url);
   var facebookbotEnabled = matchUrlDomain(use_facebook_bot, details.url);
   var useragent_customEnabled = matchUrlDomain(use_useragent_custom, details.url);
@@ -1687,8 +1746,25 @@ if (matchUrlDomain(change_headers, details.url) && !ignore_types.includes(detail
 }// manifest v2
 
 function check_sites_custom_ext(optin_update) {
-  // Remote auto-update disabled
-  return;
+  fetch(sites_custom_ext_json)
+  .then(response => {
+    if (response.ok) {
+      response.json().then(json => {
+        customSitesExt = Object.values(json).map(x => x.domain);
+        if (!optin_update) {
+          if (json['###_remove_sites'] && json['###_remove_sites'].cs_code) {
+            customSitesExt_remove = json['###_remove_sites'].cs_code.split(/,\s*/);
+            let upd_match = customSitesExt_remove.filter(x => x.match(/^###_custom_/));
+            if (upd_match.length) {
+              ext_api.storage.local.set({
+                sites_custom_upd_version: upd_match[0].replace('###_custom_', '')
+              });
+            }
+          }
+        }
+      })
+    }
+  }).catch(err => false);
 }
 
 var customSitesExt = [];
@@ -1758,8 +1834,54 @@ function setExtVersionNew(check_ext_version_new, check_ext_upd_version_new = che
 
 var ext_version_new, ext_upd_version_new;
 function check_update() {
-  // Remote auto-update disabled
-  return;
+  let manifest_new = ext_path + 'manifest.json';
+  fetch(manifest_new)
+  .then(response => {
+    if (response.ok) {
+      response.json().then(json => {
+        let json_ext_version_new = json['version'];
+        ext_api.management.getSelf(function (result) {
+          if (result.installType !== 'development') {
+            if (manifestData.browser_specific_settings && manifestData.browser_specific_settings.gecko.update_url) {
+              let json_upd_version_new = manifestData.browser_specific_settings.gecko.update_url;
+              fetch(json_upd_version_new)
+              .then(response => {
+                if (response.ok) {
+                  response.json().then(upd_json => {
+                    if (upd_json.addons) {
+                      let ext_id = manifestData.browser_specific_settings.gecko.id;
+                      let json_ext_upd_version_new = upd_json.addons[ext_id].updates[0].version;
+                      setExtVersionNew(json_ext_version_new, json_ext_upd_version_new);
+                    }
+                  })
+                } else
+                  setExtVersionNew(json_ext_version_new, '1');
+              }).catch(err => setExtVersionNew(json_ext_version_new, '1'));
+            } else if (manifestData.update_url) {
+              let json_upd_version_new = manifestData.update_url;
+              fetch(json_upd_version_new)
+              .then(response => {
+                if (response.ok) {
+                  response.text().then(upd_html => {
+                    if (upd_html.includes(".crx' version='")) {
+                      let json_ext_upd_version_new = upd_html.split(".crx' version='")[1].split("'")[0];
+                      setExtVersionNew(json_ext_version_new, json_ext_upd_version_new);
+                    }
+                  })
+                } else
+                  setExtVersionNew(json_ext_version_new, '1');
+              }).catch(err => setExtVersionNew(json_ext_version_new, '1'));
+            }
+          } else
+            setExtVersionNew(json_ext_version_new);
+        })
+        ext_api.storage.local.set({
+          sites_custom_upd_version: json['sites_custom_upd_version'] || ''
+        });
+      })
+    } else
+      setExtVersionNew('');
+  }).catch(err => setExtVersionNew(''));
 }
 
 function site_switch() {
@@ -1966,13 +2088,13 @@ ext_api.runtime.onMessage.addListener(function (message, sender) {
     site_switch();
   }
   if (message.request === 'check_sites_updated') {
-    // Remote auto-update disabled
+    check_sites_updated(sites_updated_json_online);
   }
   if (message.request === 'clear_sites_updated') {
     clear_sites_updated();
   }
   if (message.request === 'check_update') {
-    // Remote auto-update disabled
+    check_update();
   }
   if (message.request === 'popup_show_toggle') {
     ext_api.tabs.query({
@@ -2104,8 +2226,10 @@ ext_api.runtime.onMessage.addListener(function (message, sender) {
               }
             }
           });
-        } else
+        } else {
+          message.data.blocked = true;
           sendArticleSrc(sender.tab.id, message);
+        }
       }).catch(function (err) {
         sendArticleSrc(sender.tab.id, message);
       });

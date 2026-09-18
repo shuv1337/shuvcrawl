@@ -1,6 +1,6 @@
 var ext_api = chrome || browser;
 var manifestData = ext_api.runtime.getManifest();
-var ext_url = '';
+var ext_url = 'https://gitflic.ru/project/magnolia1234/bpc_uploads';
 var ext_name = manifestData.name;
 var ext_version = manifestData.version;
 var version_str = 'v' + ext_version;
@@ -48,8 +48,13 @@ function show_update(ext_version_new, check = true) {
 }
 
 function check_version_update(ext_version_new, popup) {
-  // Remote auto-update disabled
-  show_update(ext_version_new, false);
+  if (!popup) {
+    ext_api.runtime.sendMessage({
+      request: 'check_update'
+    });
+    show_update(ext_version_new);
+  } else
+    show_update(ext_version_new, false);
 }
 
 ext_api.storage.local.get({optInUpdate: true, ext_upd_version_new: false}, function (result) {

@@ -19,11 +19,6 @@ var defaultSites = {
     allow_cookies: 1,
     block_regex: /\.poool\.fr\//
   },
-  "Aachener Zeitung (fetch from archive.is)": {
-    domain: "aachener-zeitung.de",
-    allow_cookies: 1,
-    cs_dompurify: 1
-  },
   "Abcmais.com": {
     domain: "abcmais.com",
     allow_cookies: 1,
@@ -50,18 +45,12 @@ var defaultSites = {
       "syracuse.com"
     ],
     allow_cookies: 1,
-    block_regex: /\.sophi\.io\//,
-    cs_dompurify: 1
+    block_regex: /\.sophi\.io\//
   },
   "Adweek": {
     domain: "adweek.com",
     remove_cookies_select_drop: ["blaize_session"],
     block_regex: /\.adweek\.com\/wp-content\/plugins\/adw-zephr\//
-  },
-  "Aftenposten.no": {
-    domain: "aftenposten.no",
-    allow_cookies: 1,
-    useragent: "googlebot"
   },
   "Al-Monitor (fetch from archive.is)": {
     domain: "al-monitor.com",
@@ -115,6 +104,17 @@ var defaultSites = {
     domain: "americanpurpose.com",
     allow_cookies: 1,
     block_regex: /\/steadyhq\.com\//
+  },
+  "Anandabazar Patrika (not epaper)": {
+    domain: "anandabazar.com",
+    allow_cookies: 1,
+    block_js_inline: /\.anandabazar\.com\/.+\/cid\//,
+    block_regex: /\.anandabazar\.com\/subscription-assets\/js\/paywall.*\.js/
+  },
+  "Anchorage Daily News": {
+    domain: "adn.com",
+    allow_cookies: 1,
+    block_regex: /\.adn\.com\/script\.js/
   },
   "Aoc.media": {
     domain: "aoc.media",
@@ -260,15 +260,14 @@ var defaultSites = {
     allow_cookies: 1,
     cs_dompurify: 1
   },
+  "Bangkok Post": {
+    domain: "bangkokpost.com",
+    allow_cookies: 1
+  },
   "Bar and Bench": {
     domain: "barandbench.com",
     allow_cookies: 1,
     cs_dompurify: 1
-  },
-  "Barron's": {
-    domain: "barrons.com",
-    allow_cookies: 1,
-    block_regex: /\.cxense\.com\//
   },
   "BBC History Extra": {
     domain: "historyextra.com",
@@ -280,6 +279,13 @@ var defaultSites = {
     allow_cookies: 1,
     block_regex: /\.tinypass\.com\//
   },
+  "BDU media.nl (opt-in to custom sites)": {
+    domain: "###_nl_bdumedia",
+    group: [],
+    allow_cookies: 1,
+    useragent: "googlebot",
+    cs_code: [{"hide_elem":"div.pgAdWrapper"}]
+  },
   "Benzinga": {
     domain: "benzinga.com"
   },
@@ -288,10 +294,10 @@ var defaultSites = {
     allow_cookies: 1,
     useragent: "facebookbot"
   },
-  "Berliner Zeitung (fetch from archive.is)": {
+  "Berliner Zeitung": {
     domain: "berliner-zeitung.de",
     allow_cookies: 1,
-    cs_dompurify: 1
+    useragent: "googlebot"
   },
   "Berlingske Media": {
     domain: "###_dk_berlingske_media",
@@ -317,11 +323,11 @@ var defaultSites = {
     allow_cookies: 1,
     block_regex: /\.piano\.io\//
   },
-  "Bloomberg": {
+  "Bloomberg (not Terminal)": {
     domain: "bloomberg.com",
     allow_cookies: 1,
-    cs_clear_lclstrg: 1,
-    block_regex: /(\.cm\.bloomberg\.com\/|assets\.bwbx\.io\/s\d\/javelin\/.+\/transporter\/)/
+    block_regex: /\.bwbx\.io\/s3\/fence\/fortress-client\/.+\.css/,
+    cs_dompurify: 1
   },
   "Bloomberg Adria": {
     domain: "bloombergadria.com",
@@ -362,11 +368,6 @@ var defaultSites = {
     allow_cookies: 1,
     block_regex: "(\\.{domain}\\/script\\.js|\\.blueconic\\.net\\/)"
   },
-  "Brill": {
-    domain: "brill.com",
-    allow_cookies: 1,
-    useragent: "googlebot"
-  },
   "Bulletin of the Atomic Scientists": {
     domain: "thebulletin.org",
     allow_cookies: 1,
@@ -381,7 +382,7 @@ var defaultSites = {
   "BusinessDesk.co.nz": {
     domain: "businessdesk.co.nz",
     allow_cookies: 1,
-    useragent_custom: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+    useragent_custom: "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36",
     cs_dompurify: 1
   },
   "Business Insider": {
@@ -445,6 +446,11 @@ var defaultSites = {
     allow_cookies: 1,
     block_regex: /\.qiota\.com\//
   },
+  "Cerveau et Psycho.fr": {
+    domain: "cerveauetpsycho.fr",
+    allow_cookies: 1,
+    block_regex: /\.qiota\.com\//
+  },
   "Challenges": {
     domain: "challenges.fr",
     allow_cookies: 1,
@@ -458,6 +464,11 @@ var defaultSites = {
   },
   "Chemical & Engineering News": {
     domain: "cen.acs.org"
+  },
+  "Chicago Sun-Times": {
+    domain: "chicago.suntimes.com",
+    allow_cookies: 1,
+    block_regex: /\.tinypass\.com\//
   },
   "Chunichi Shimbun Group": {
     domain: "###_jp_chunichi_shimbun",
@@ -477,6 +488,11 @@ var defaultSites = {
   },
   "Cicero.de (fetch from archive.is)": {
     domain: "cicero.de",
+    allow_cookies: 1,
+    cs_dompurify: 1
+  },
+  "Citeline Insights": {
+    domain: "insights.citeline.com",
     allow_cookies: 1,
     cs_dompurify: 1
   },
@@ -544,7 +560,7 @@ var defaultSites = {
   "Corriere della Sera": {
     domain: "corriere.it",
     allow_cookies: 1,
-    block_regex: /(\.tinypass\.com\/|\.corriereobjects\.it\/.+\/js\/_paywall\.sjs|\.ampproject\.org\/v0\/amp-subscriptions-.+\.js)/
+    block_regex: /(\.tinypass\.com\/|\.ith9ueyuhu\.it\/|\.ampproject\.org\/v0\/amp-subscriptions-.+\.js)/
   },
   "Corriere dello Sport": {
     domain: "corrieredellosport.it",
@@ -593,7 +609,7 @@ var defaultSites = {
     block_regex: "(js\\.pelcro\\.com\\/|\\.sophi\\.io\\/|\\.{domain}\\/script\\.js)",
     cs_dompurify: 1,
     exception: [{
-        domain: ["360dx.com", "crainsgrandrapids.com", "genomeweb.com", "precisionmedicineonline.com"],
+        domain: ["360dx.com", "genomeweb.com", "precisionmedicineonline.com"],
         allow_cookies: 1,
         block_regex: "(js\\.pelcro\\.com\\/|\\.{domain}\\/(script|profiles\\/.+\\/crain_pelcro_user)\\.js)"
       }, {
@@ -606,10 +622,6 @@ var defaultSites = {
     domain: "crusoe.com.br",
     allow_cookies: 1,
     cs_dompurify: 1
-  },
-  "Dagens ETC": {
-    domain: "etc.se",
-    allow_cookies: 1
   },
   "CyclingNews": {
     domain: "cyclingnews.com",
@@ -629,8 +641,7 @@ var defaultSites = {
   "Daily Mail Group UK": {
     domain: "###_uk_dmg_media",
     group: [
-      "dailymail.co.uk",
-      "mailonsunday.co.uk",
+      "dailymail.com",
       "thisismoney.co.uk"
     ],
     allow_cookies: 1,
@@ -681,15 +692,9 @@ var defaultSites = {
     group: [],
     allow_cookies: 1,
     useragent: "googlebot",
-    cs_code: [{"hide_elem":"div.Ad"}],
-    exception: [{
-        domain: ["agrarzeitung.de", "ahgz.de", "fleischwirtschaft.de", "horizont.net"],
-        allow_cookies: 1,
-        add_ext_link: "div#pw-layer|div.ArticleCopy",
-        add_ext_link_type: "google_search_tool",
-        cs_code: [{"hide_elem":"div.Ad"}]
-      }
-    ]
+    add_ext_link: ".FormRegisterNG:is(div,section)|div.PageArticle",
+    add_ext_link_type: "google_search_tool",
+    cs_code: [{"hide_elem":"div.Ad"}]
   },
   "Diario de Navarra (text only)": {
     domain: "diariodenavarra.es",
@@ -719,7 +724,6 @@ var defaultSites = {
   "Die Welt (fetch from archive.is)": {
     domain: "welt.de",
     allow_cookies: 1,
-    block_regex: /\.welt\.de\/variants-.+\.js/,
     cs_dompurify: 1
   },
   "Die Zeit (fetch from archive.is)": {
@@ -737,12 +741,6 @@ var defaultSites = {
     ],
     allow_cookies: 1,
     block_regex: /\.tinypass\.com\//
-  },
-  "DigiTimes Asia": {
-    domain: "digitimes.com",
-    allow_cookies: 1,
-    block_regex: /\.piano\.io\//,
-    useragent: "googlebot"
   },
   "Discover Magazine": {
     domain: "discovermagazine.com"
@@ -773,7 +771,7 @@ var defaultSites = {
   "Dnevnik.bg": {
     domain: "dnevnik.bg",
     allow_cookies: 1,
-    useragent_custom: "Mozilla/5.0 (Java) outbrain"
+    cs_dompurify: 1
   },
   "Domani": {
     domain: "editorialedomani.it",
@@ -906,6 +904,13 @@ var defaultSites = {
     domain: "enotes.com",
     remove_cookies_select_drop: ["ENOTESID"]
   },
+  "Enter media.nl (opt-in to custom sites)": {
+    domain: "###_nl_enter_media",
+    group: [],
+    allow_cookies: 1,
+    useragent: "googlebot",
+    cs_code: [{"hide_elem":"div.pgAdWrapper"}]
+  },
   "Entrepreneur": {
     domain: "entrepreneur.com",
     allow_cookies: 1,
@@ -958,12 +963,6 @@ var defaultSites = {
     block_regex: /(\.tinypass\.com\/|\.fastcompany\.com\/script\.js)/,
     cs_dompurify: 1
   },
-  "Fd.nl": {
-    domain: "fd.nl",
-    allow_cookies: 1,
-    block_regex: /\/specials\.fd\.nl\/_next\/static\/chunks\/framework-.+\.js/,
-    useragent: "googlebot"
-  },
   "Field & Stream": {
     domain: "fieldandstream.com",
     allow_cookies: 1
@@ -979,7 +978,9 @@ var defaultSites = {
     cs_dompurify: 1
   },
   "First Things": {
-    domain: "firstthings.com"
+    domain: "firstthings.com",
+    allow_cookies: 1,
+    block_regex: /\/firstthings\.com\/wp-content\/plugins\/leaky-paywall\/js\/leaky-paywall-cookie\.js/
   },
   "FMR": {
     domain: "fmrmagazine.com",
@@ -1045,7 +1046,13 @@ var defaultSites = {
     domain: "foxnews.com",
     allow_cookies: 1
   },
-  "Frankfurter Allgemeine Zeitung": {
+  "Franc-Tireur.fr": {
+    domain: "franc-tireur.fr",
+    allow_cookies: 1,
+    block_regex: /\.poool\.fr\//,
+    cs_dompurify: 1
+  },
+  "Frankfurter Allgemeine Zeitung (not rechner)": {
     domain: "faz.net",
     allow_cookies: 1,
     cs_dompurify: 1
@@ -1054,27 +1061,6 @@ var defaultSites = {
     domain: "freiepresse.de",
     allow_cookies: 1,
     useragent: "googlebot"
-  },
-  "FT Specialist Group (opt-in to custom sites)": {
-    domain: "###_uk_ft_specialist",
-    group: [],
-    allow_cookies: 1,
-    block_regex: /\.ftspecialist-us\.com\/pub\/.+\/enroll-.+\.js/,
-    useragent: "googlebot",
-    ld_json_next: "div#anonymous-lead-enroll-form|div.article-body>div>p",
-    cs_code: [{"cond": "div.article-body", "rm_class": "one-click"}, {"hide_elem": "div[id$='ad-header']"}],
-    exception: [{
-        domain: "endpoints.news",
-        allow_cookies: 1,
-        useragent: "googlebot"
-      }, {
-        domain: "financialadvisoriq.com",
-        allow_cookies: 1,
-        block_regex: /\.ftspecialist-us\.com\/pub\/.+\/content-.+\.js/,
-        ld_json_next: "div#anonymous-lead-enroll-form|div.article-body>div>p",
-        cs_code: [{"cond": "div.article-body", "rm_class": "one-click"}, {"hide_elem": "div[id$='ad-header']"}]
-      }
-    ]
   },
   "Funke Mediengruppe": {
     domain: "###_de_funke_medien",
@@ -1119,7 +1105,8 @@ var defaultSites = {
       "tennessean.com"
     ],
     allow_cookies: 1,
-    useragent: "googlebot"
+    useragent: "googlebot",
+    headers_filter: "\\.{domain}\\/.+\\/\\d{10,}\\/"
   },
   "GaúchaZH": {
     domain: "gauchazh.clicrbs.com.br",
@@ -1249,6 +1236,16 @@ var defaultSites = {
     allow_cookies: 1,
     cs_dompurify: 1
   },
+  "Groupe MacGeneration": {
+    domain: "###_fr_groupe_macg",
+    group: [
+      "igen.fr",
+      "macg.co",
+      "watchgeneration.fr"
+    ],
+    allow_cookies: 1,
+    cs_dompurify: 1
+  },
   "Groupe Nice-Matin": {
     domain: "###_fr_groupe_nice_matin",
     group: [
@@ -1318,6 +1315,16 @@ var defaultSites = {
     ld_json_url: "div#encart_abo|div.article_bloc_texte",
     useragent: "googlebot"
   },
+  "Groupe Télégramme": {
+    domain: "###_fr_groupe_telegramme",
+    group: [
+      "letelegramme.fr",
+      "meretmarine.com"
+    ],
+    allow_cookies: 1,
+    block_regex: /\.poool\.fr\//,
+    cs_code: [{"hide_elem": "div[id^='advertising-']"}]
+  },
   "Grupo Abril": {
     domain: "abril.com.br",
     allow_cookies: 1,
@@ -1349,6 +1356,15 @@ var defaultSites = {
     ],
     allow_cookies: 1,
     block_regex: "(\\.tinypass\\.com\\/|\\/{domain}\\/pf\\/dist\\/engine\\/react\\.js)"
+  },
+  "Grupo Joly (ES; opt-in to custom sites for unlisted)": {
+    domain: "###_es_grupo_joly",
+    group: [
+      "diariodesevilla.es"
+    ],
+    allow_cookies: 1,
+    block_regex: /\.poool\.fr\//,
+    cs_code: [{"hide_elem":"aside[data-ad-type]"}]
   },
   "Grupo Prensa Ibérica (opt-in to custom sites for unlisted)": {
     domain: "###_es_epiberica",
@@ -1405,16 +1421,14 @@ var defaultSites = {
       "italian.tech",
       "lastampa.it",
       "lescienze.it",
-      "moda.it",
       "repubblica.it"
     ],
     remove_cookies_select_drop: ["blaize_session"],
     block_regex: /scripts\.repubblica\.it\/pw\/pw\.js/,
     useragent: "googlebot",
     exception: [{
-        domain: ["lastampa.it"],
-        block_js_inline: /\.it\/.+\/news\//,
-        remove_cookies_select_drop: ["blaize_session"]
+        domain: "lastampa.it",
+        block_js_inline: /\.it\/.+\/news\//
       }, {
         domain: "repubblica.it",
         allow_cookies: 1,
@@ -1429,7 +1443,7 @@ var defaultSites = {
       "lanuovasardegna.it"
     ]
   },
-  "Haaretz Group (article no menu/footer)": {
+  "Haaretz Group (article no menu/footer/comments)": {
     domain: "###_il_haaretz_group",
     group: [
       "haaretz.co.il",
@@ -1438,13 +1452,14 @@ var defaultSites = {
     ],
     remove_cookies_select_drop: ["ra"],
     headers_custom: {ismobileapp: "true", platform: "app", renderingkind: "opened"},
-    useragent_custom: "Mozilla/5.0 (Linux; Android 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.6668.70 Safari/537.36 haaretz/5.0.49"
+    useragent_custom: "Mozilla/5.0 (Linux; Android 9) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Safari/537.36 haaretz/5.0.49"
   },
   "Handelsblatt": {
     domain: "handelsblatt.com",
     allow_cookies: 1,
     block_regex: /\.piano\.io\//,
-    useragent: "googlebot"
+    useragent: "googlebot",
+    headers_filter: /\.handelsblatt\.com\/.+\.html/
   },
   "Harper's Magazine (free articles only)": {
     domain: "harpers.org",
@@ -1545,6 +1560,10 @@ var defaultSites = {
     allow_cookies: 1,
     block_regex: /js\.matheranalytics\.com\//
   },
+  "HotNews.ro": {
+    domain: "hotnews.ro",
+    allow_cookies: 1
+  },
   "Iconic Media Group (UK; opt-in to custom sites for unlisted)": {
     domain: "###_uk_iconic_media",
     group: [
@@ -1562,7 +1581,7 @@ var defaultSites = {
   "Il Foglio": {
     domain: "ilfoglio.it",
     allow_cookies: 1,
-    block_regex: /\.ampproject\.org\/v0\/amp-subscriptions-.+\.js/
+    block_regex: /\.newsmemory\.com\/\?meter/
   },
   "Il Manifesto": {
     domain: "ilmanifesto.it",
@@ -1639,7 +1658,8 @@ var defaultSites = {
   },
   "Interesting Engineering": {
     domain: "interestingengineering.com",
-    allow_cookies: 1
+    allow_cookies: 1,
+    cs_dompurify: 1
   },
   "Internazionale.it": {
     domain: "internazionale.it",
@@ -1648,9 +1668,7 @@ var defaultSites = {
   },
   "Investor's Business Daily": {
     domain: "investors.com",
-    remove_cookies_select_drop: ["__tbc"],
-    block_regex: /\.tinypass\.com\//,
-    cs_dompurify: 1
+    block_regex: /\.tinypass\.com\//
   },
   "Investors' Chronicle (UK)": {
     domain: "investorschronicle.co.uk",
@@ -1671,11 +1689,6 @@ var defaultSites = {
     ],
     allow_cookies: 1,
     block_regex: "\\.{domain}\\/sub\\/js\\/pc-offer-west\\.js"
-  },
-  "Irish Independent": {
-    domain: "independent.ie",
-    allow_cookies: 1,
-    cs_dompurify: 1
   },
   "Italia Oggi": {
     domain: "italiaoggi.it",
@@ -1733,18 +1746,13 @@ var defaultSites = {
   "L'Équipe.fr": {
     domain: "lequipe.fr",
     allow_cookies: 1,
+    block_regex: /(\.poool\.fr\/|\.lequipe\.fr\/assets\/js\/.*[wW]all.+\.js)/,
     cs_dompurify: 1
   },
   "L'Express": {
     domain: "lexpress.fr",
     allow_cookies: 1,
     block_regex: /\.qiota\.com\/data/
-  },
-  "L'Humanité": {
-    domain: "humanite.fr",
-    allow_cookies: 1,
-    block_regex: /(\.poool\.fr\/|\.qiota\.com\/)/,
-    cs_dompurify: 1
   },
   "L'Informé (not pro)": {
     domain: "linforme.com",
@@ -1805,6 +1813,10 @@ var defaultSites = {
     allow_cookies: 1,
     block_regex: /\/ev\.lavanguardia\.com\//
   },
+  "Lance.com.br": {
+    domain: "lance.com.br",
+    allow_cookies: 1
+  },
   "Landwirtschaftsverlag": {
     domain: "###_de_lv",
     group: [
@@ -1824,6 +1836,11 @@ var defaultSites = {
     domain: "reviewjournal.com",
     allow_cookies: 1,
     block_regex: /\.reviewjournal\.com\/wp-content\/plugins\/.+\/loader_prod\.min\.js/
+  },
+  "Las Vegas Sun": {
+    domain: "lasvegassun.com",
+    allow_cookies: 1,
+    block_regex: /\.q0losid\.com\/prod\/gmg\/loader\.min\.js/
   },
   "Law.com (not archive)": {
     domain: "law.com",
@@ -1881,6 +1898,7 @@ var defaultSites = {
     domain: "leparisien.fr",
     allow_cookies: 1,
     useragent: "googlebot",
+    headers_filter: /\/www\.leparisien\.fr\//,
     cs_dompurify: 1
   },
   "Le Point": {
@@ -1892,11 +1910,6 @@ var defaultSites = {
     domain: "lerevenu.com",
     allow_cookies: 1,
     block_regex: /\.qiota\.com\//
-  },
-  "Le Télégramme": {
-    domain: "letelegramme.fr",
-    allow_cookies: 1,
-    block_regex: /\.poool\.fr\//
   },
   "Le Temps.ch (fetch from archive.is)": {
     domain: "letemps.ch",
@@ -1972,7 +1985,7 @@ var defaultSites = {
   "Los Angeles Times": {
     domain: "latimes.com",
     allow_cookies: 1,
-    block_regex: /\.latimes\.com\/meteringjs/
+    block_regex: /(\.latimes\.com\/meteringjs|\.californiatimes\.com\/caltimes\/latimes\/Bootstrap\.js)/
   },
   "MacroBusiness.com.au": {
     domain: "macrobusiness.com.au",
@@ -2002,21 +2015,10 @@ var defaultSites = {
     allow_cookies: 1,
     block_regex: "\\.{domain}\\/(script|.+\\/loader\\.min)\\.js"
   },
-  "Mainichi Shimbun": {
-    domain: "mainichi.jp",
-    allow_cookies: 1,
-    useragent: "googlebot"
-  },
   "Malayala Manorama": {
     domain: "manoramaonline.com",
     allow_cookies: 1,
     block_regex: /\.ampproject\.org\/v0\/amp-access-.+\.js/,
-  },
-  "Marianne.net (last month only)": {
-    domain: "marianne.net",
-    allow_cookies: 1,
-    block_regex: /\.poool\.fr\//,
-    cs_dompurify: 1
   },
   "MarketWatch": {
     domain: "marketwatch.com",
@@ -2061,27 +2063,6 @@ var defaultSites = {
     allow_cookies: 1,
     cs_dompurify: 1
   },
-  "Mediahuis Nederland Regional (fetch from archive.is; opt-in to custom sites for unlisted)": {
-    domain: "###_nl_mediahuis_region",
-    group: [
-      "haarlemsdagblad.nl",
-      "leidschdagblad.nl",
-      "limburger.nl",
-      "noordhollandsdagblad.nl"
-    ],
-    allow_cookies: 1,
-    cs_dompurify: 1
-  },
-  "Mediahuis Noord (+ regional/opt-in to custom sites)": {
-    domain: "###_nl_mediahuis_noord",
-    group: [
-      "dvhn.nl",
-      "lc.nl"
-    ],
-    allow_cookies: 1,
-    block_regex: /\.ndcmediagroep\.nl\/js\/evolok\//,
-    cs_dompurify: 1
-  },
   "MediaNews Group (opt-in to custom sites for unlisted)": {
     domain: "###_usa_mng",
     group: [
@@ -2115,7 +2096,7 @@ var defaultSites = {
   "Mexico News Daily": {
     domain: "mexiconewsdaily.com",
     allow_cookies: 1,
-    block_regex: /\/mexiconewsdaily\.com\/wp-content\/plugins\/leaky-paywall\/js\/leaky-paywall-cookie\.js/
+    block_regex: /\/mexiconewsdaily\.com\/wp-json\/leaky-paywall\/v1\/check-restrictions/
   },
   "Mid-Day (not epaper)": {
     domain: "mid-day.com",
@@ -2146,10 +2127,6 @@ var defaultSites = {
     allow_cookies: 1,
     block_regex: /\.piano\.io\//,
     cs_dompurify: 1
-  },
-  "MNI Market News": {
-    domain: "mnimarkets.com",
-    allow_cookies: 1
   },
   "Monocle": {
     domain: "monocle.com",
@@ -2192,8 +2169,21 @@ var defaultSites = {
       "businessdailyafrica.com",
       "nation.africa"
     ],
+    allow_cookies: 1
+  },
+  "National Geographic ES": {
+    domain: "nationalgeographic.com.es",
     allow_cookies: 1,
-    cs_dompurify: 1
+    block_regex: /\.nationalgeographic\.com\.es\/Content\/js\/lib\/runtime\.min\.js/
+  },
+  "National Geographic IT": {
+    domain: "nationalgeographic.it",
+    allow_cookies: 1
+  },
+  "National Geographic NL": {
+    domain: "nationalgeographic.nl",
+    allow_cookies: 1,
+    block_regex: /\.piano\.io\//
   },
   "National Geographic USA": {
     domain: "nationalgeographic.com",
@@ -2217,10 +2207,22 @@ var defaultSites = {
     domain: "nature.com",
     cs_dompurify: 1
   },
+  "NBC News": {
+    domain: "nbcnews.com",
+    allow_cookies: 1,
+    block_regex: /\.tinypass\.com\//,
+    useragent: "googlebot"
+  },
   "NDTV Profit": {
     domain: "ndtvprofit.com",
     allow_cookies: 1,
     block_regex: /\.ampproject\.org\/v0\/amp-subscriptions-.+\.js/
+  },
+  "Nederlands Dagblad": {
+    domain: "nd.nl",
+    allow_cookies: 1,
+    block_js_inline: /\.nd\.nl\/.+\/\d{7,}\//,
+    useragent: "googlebot"
   },
   "Neue Westfälische": {
     domain: "nw.de",
@@ -2234,7 +2236,7 @@ var defaultSites = {
   "New Scientist": {
     domain: "newscientist.com",
     allow_cookies: 1,
-    block_regex: /(\.piano\.io\/|appan\.newscientist\.com\/pugpig-websmartbanner\.js)/,
+    block_regex: /(\.newscientist\.com\/api\/tinypass\.min\.js|appan\.newscientist\.com\/pugpig-websmartbanner\.js)/,
     cs_all_frames: 1,
     cs_dompurify: 1
   },
@@ -2246,7 +2248,12 @@ var defaultSites = {
   "New York Post": {
     domain: "nypost.com",
     allow_cookies: 1,
-    block_regex: /\.nypost\.com\/zephr\/feature/
+    block_regex: /\.nypost\.com\/zephr\/feature/,
+    cs_param: {"app-identifier": "com.news.screens", "device-type": "phone", "user-agent": "okhttp/4.12.0", "x-access-token": "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9.eyJBVVRIX1BIUkFTRV9QUk9EX0FORFJPSUQiOiJGNGYzYnhzZGlIa1M1QzVIWUxUNSJ9.OGooBqisVQznx2FDxZpHAqWu-oG1wPJLUxYBMd3xOKiLakoR2XQC2hXnyS3zb1Dw6AkKcMhWyZfRerUckFjga8Ii59lZtP8Xt92iCUyJjs0yjmLJgkZWEGqZ8szM2UK7jZJ5SsHaYfe2V3c7KrtfbY74aWGwddvg-Ex4O5hwv3aiAJpI_aZMFqniClGM2pYbGNSPxH-I0PMuwTzt-oyofhQsRJWOQES8fmQz1H-opqQVr3B0-ev4MxYZjfk8kKnXxRbf7tDbQvastQh8kLe3KN90ptSp_LWbkPgo0G8Vw9Jzxy1TUd_VNgTE21uNdRAoZbxDly7aw-9CTDtb1OtXVg"}
+  },
+  "New Zealand Geographic": {
+    domain: "nzgeo.com",
+    remove_cookies_select_drop: ["visits"]
   },
   "New Zealand Herald": {
     domain: "nzherald.co.nz",
@@ -2256,7 +2263,7 @@ var defaultSites = {
   "Newsday": {
     domain: "newsday.com",
     allow_cookies: 1,
-    block_regex: /\.newsday\.com\/prod\/newsday\/loader\.min\.js/
+    block_regex: /\.newsday\.com\/nd-user\/nd_user_ace\.bundle\.js/
   },
   "Newslaundry": {
     domain: "newslaundry.com",
@@ -2267,11 +2274,13 @@ var defaultSites = {
     domain: "###_uk_newsquest",
     group: [],
     allow_cookies: 1,
-    block_regex: /\.tinypass\.com\//
+    block_regex: /\.tinypass\.com\//,
+    cs_code: [{"hide_elem":"div.advert-background, div[data-uses-js='dfp-top-ad-fixed'], div#premium_mpu_container, iframe[aria-label='Advertisement']"}]
   },
   "Newsweek": {
     domain: "newsweek.com",
-    block_regex: /(js\.pelcro\.com\/|\.ampproject\.org\/v0\/amp-(access|subscriptions)-.+\.js)/
+    allow_cookies: 1,
+    block_regex: /\.newsweek\.com\/api\/tinypass\.min\.js/
   },
   "Nikkei Asian Review": {
     domain: "asia.nikkei.com",
@@ -2322,14 +2331,24 @@ var defaultSites = {
   "Observador.pt": {
     domain: "observador.pt",
     allow_cookies: 1,
-    block_regex: /\/observador\.pt\/wp-content\/.+\/paywall-price-.+\.js/
+    block_regex: /\/observador\.pt\/wp-content\/.+\/paywall-compact-new\.min\.js/
   },
-  "ON3 (fetch from archive.is)": {
-    domain: "on3.com",
+  "Oil & Gas Journal": {
+    domain: "ogj.com",
     allow_cookies: 1,
-    cs_dompurify: 1
+    block_js_inline: /\.ogj\.com\/.+\/\d{8,}\//
   },
-  "Ouest-France.fr": {
+  "OKO.press (PL)": {
+    domain: "oko.press",
+    allow_cookies: 1,
+    block_regex: /\/oko\.press\/_next\/static\/chunks\/pages\/%5Bslug.+\.js/
+  },
+  "Ostdeutsche Allgemeine": {
+    domain: "ostdeutscheallgemeine.com",
+    allow_cookies: 1,
+    useragent: "googlebot"
+  },
+  "Ouest-France.fr (not subdomains)": {
     domain: "ouest-france.fr",
     allow_cookies: 1
   },
@@ -2420,12 +2439,6 @@ var defaultSites = {
   "Philosophy Now": {
     domain: "philosophynow.org"
   },
-  "Pirate Wires": {
-    allow_cookies: 1,
-    domain: "piratewires.com",
-    block_js_inline: /\.piratewires\.com\/p\//,
-    useragent_custom: "Mozilla/5.0 (compatible; Twitterbot/1.0)"
-  },
   "Pittsburgh Post Gazette": {
     domain: "post-gazette.com",
     block_regex: /\.tinypass\.com\//
@@ -2438,11 +2451,6 @@ var defaultSites = {
     domain: "politico.com",
     allow_cookies: 1,
     block_regex: /\.piano\.io\//
-  },
-  "Politis.fr": {
-    domain: "politis.fr",
-    allow_cookies: 1,
-    block_regex: /\.poool\.fr\//
   },
   "Polityka.pl": {
     domain: "polityka.pl",
@@ -2492,9 +2500,10 @@ var defaultSites = {
     allow_cookies: 1,
     block_regex: /\.piano\.io\//
   },
-  "Project Syndicate (fetch from archive.is)": {
+  "Project Syndicate": {
     domain: "project-syndicate.org",
     allow_cookies: 1,
+    useragent: "googlebot",
     cs_dompurify: 1
   },
   "ProMedia.nl Group (opt-in to custom sites)": {
@@ -2548,6 +2557,11 @@ var defaultSites = {
     ],
     allow_cookies: 1,
     block_regex: /(\.tinypass\.com\/|\.ampproject\.org\/v0\/amp-access-.+\.js)/
+  },
+  "Rane Worldview": {
+    domain: "worldview.ranenetwork.com",
+    allow_cookies: 1,
+    useragent: "googlebot"
   },
   "Reach Group UK": {
     domain: "###_uk_reach",
@@ -2605,7 +2619,6 @@ var defaultSites = {
     ],
     allow_cookies: 1,
     block_regex: /\.tinypass\.com\//,
-    useragent: "googlebot",
     cs_dompurify: 1,
     exception: [{
         domain: "blick.ch",
@@ -2626,6 +2639,10 @@ var defaultSites = {
     ],
     allow_cookies: 1,
     block_regex: /\.piano\.io\//
+  },
+  "Rotowire": {
+    domain: "rotowire.com",
+    allow_cookies: 1
   },
   "Roularta Media Group": {
     domain: "###_be_roularta",
@@ -2651,7 +2668,8 @@ var defaultSites = {
   "S&P Global": {
     domain: "spglobal.com",
     block_regex: /\.spglobal\.com\/script\.js/,
-    remove_cookies_select_drop: ["count"]
+    remove_cookies_select_drop: ["count"],
+    cs_dompurify: 1
   },
   "Sábado (not video)": {
     domain: "sabado.pt",
@@ -2726,16 +2744,12 @@ var defaultSites = {
     allow_cookies: 1,
     cs_dompurify: 1
   },
-  "Spacenews": {
-    domain: "spacenews.com",
-    allow_cookies: 1,
-    block_regex: /\/spacenews\.com\/wp-content\/plugins\/newspack-plugin\/dist\/content-gate-metering\.js/
-  },
   "Spektrum.de": {
     domain: "spektrum.de",
-    allow_cookies: 1
+    allow_cookies: 1,
+    block_regex: /\.poool\.fr\//
   },
-  "SPH Media (fetch from archive.is)": {
+  "SPH Media (SG)": {
     domain: "###_sg_sph_media",
     group: [
       "businesstimes.com.sg",
@@ -2745,6 +2759,7 @@ var defaultSites = {
     exception: [{
         domain: "straitstimes.com",
         allow_cookies: 1,
+        block_js_inline: /\.straitstimes\.com\/(opinion\/|.+(\w+-){3,}.+\?rel=plus)/,
         cs_dompurify: 1
       }
     ]
@@ -2774,15 +2789,17 @@ var defaultSites = {
     allow_cookies: 1,
     block_regex: /\.tinypass\.com\//
   },
-  "StatNews": {
+  "StatNews (fetch from archive.is)": {
     domain: "statnews.com",
     allow_cookies: 1,
-    block_regex: /\.tinypass\.com\//
+    block_regex: /\.tinypass\.com\//,
+    cs_dompurify: 1
   },
   "Stereogum (no comments)": {
     domain: "stereogum.com",
     allow_cookies: 1,
-    block_regex: /\/stereogum\.com\/_next\/static\/chunks\/pages\/_sites\/%5BsiteSlug%5D\/%5B\.\.\.slug.+\.js/
+    block_regex: /\/stereogum\.com\/_next\/static\/chunks\/pages\/_sites\/%5BsiteSlug%5D\/%5B\.\.\.slug.+\.js/,
+    cs_dompurify: 1
   },
   "Stern.de (fetch from archive.is)": {
     domain: "stern.de",
@@ -2792,11 +2809,6 @@ var defaultSites = {
   "Stock News": {
     domain: "stocknews.com",
     allow_cookies: 1
-  },
-  "Stratfor": {
-    domain: "stratfor.com",
-    allow_cookies: 1,
-    useragent: "googlebot"
   },
   "Study.com (only lessons; no videos)": {
     domain: "study.com",
@@ -2832,12 +2844,6 @@ var defaultSites = {
     domain: "sueddeutsche.de",
     allow_cookies: 1,
     block_regex: /\.sueddeutsche\.de\/api\/tinypass\.min\.js/,
-    cs_dompurify: 1
-  },
-  "Südkurier (fetch from archive.is)": {
-    domain: "suedkurier.de",
-    allow_cookies: 1,
-    block_regex: /\.tinypass\.com\//,
     cs_dompurify: 1
   },
   "Swarajyamag": {
@@ -2881,6 +2887,11 @@ var defaultSites = {
     domain: "telegraaf.nl",
     remove_cookies_select_drop: ["mh_pw_se"],
     cs_dompurify: 1
+  },
+  "Telegram.hr": {
+    domain: "telegram.hr",
+    allow_cookies: 1,
+    block_js_inline: /\.telegram\.hr\/.+\/(\w+-){3,}/
   },
   "Télérama.fr": {
     domain: "telerama.fr",
@@ -2955,7 +2966,7 @@ var defaultSites = {
     domain: "bizjournals.com",
     allow_cookies: 1,
     block_regex: /\.cxense\.com\//,
-    block_js_inline: /\.bizjournals\.com\/.+\/(news|stories)\/.+\.html/,
+    block_js_inline: /\.bizjournals\.com\/.+\/(news|stories)\/.+\.html\?rel=plus/,
     cs_dompurify: 1
   },
   "The Business of Fashion": {
@@ -2989,10 +3000,6 @@ var defaultSites = {
     domain: "thedailybeast.com",
     block_regex: /\.tinypass\.com\//
   },
-  "The Daily Wire (news only)": {
-    domain: "dailywire.com",
-    allow_cookies: 1
-  },
   "The Dallas Morning News": {
     domain: "dallasnews.com",
     allow_cookies: 1,
@@ -3004,10 +3011,10 @@ var defaultSites = {
     useragent: "facebookbot",
     cs_dompurify: 1
   },
-  "The Dispatch": {
+  "The Dispatch (not newsletters; do not block TinyPass-script externally)": {
     domain: "thedispatch.com",
-    allow_cookies: 1,
-    block_regex: /(\.thedispatch\.com\/xbuilder\/experience\/execute|\.cxense\.com\/)/
+    remove_cookies_select_drop: ["xbc"],
+    cs_dompurify: 1
   },
   "The Economic Times (ET Prime)": {
     domain: "###_economictimes",
@@ -3017,27 +3024,40 @@ var defaultSites = {
       "epaper.indiatimes.com"
     ],
     allow_cookies: 1,
+    block_regex: /apw\.economictimes\.indiatimes\.com\//,
     useragent: "googlebot",
-    cs_dompurify: 1
+    headers_filter: /\/economictimes\.indiatimes\.com\/.+\.cms/,
+    exception: [{
+        domain: "economictimes.com",
+        allow_cookies: 1,
+        useragent: "googlebot",
+        headers_filter: /\.economictimes\.com\/.+\.cms/,
+        cs_dompurify: 1
+      }, {
+        domain: "epaper.indiatimes.com",
+        allow_cookies: 1
+      }
+    ]
   },
   "The Economist": {
     domain: "economist.com",
     allow_cookies: 1,
     block_regex: /(\/zephr\/feature|\.economist\.com\/(latest\/wall-ui|script)\.js)/,
-    useragent_custom: "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.6533.103 Mobile Safari/537.36 Liskov"
+    useragent_custom: "Mozilla/5.0 (Linux; Android 14) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/150.0.0.0 Mobile Safari/537.36 Liskov"
   },
-  "The Epoch Times (+ br|cz|de|fr|jp|ro; opt-in to custom sites)": {
+  "The Epoch Times (+ cz|de|fr|jp; opt-in to custom sites)": {
     domain: "###_usa_epochtimes",
     group: [
       "epoch.org.il",
       "theepochtimes.com"
     ],
     allow_cookies: 1,
-    block_regex: /\.(theepochtimes\.com|epochbase\.(com|eu))\/(rules\/get|libs\/paywall.+\.js)/,
+    block_regex: /\.(theepochtimes|epochbase)\.com\/(rules\/get|api\/rule\/)/,
     exception: [{
         domain: "epoch.org.il",
         allow_cookies: 1,
         block_js_inline: /\/epoch\.org\.il\/.+\/\d{5,}\//,
+        useragent: "googlebot",
         cs_dompurify: 1
       }
     ]
@@ -3067,12 +3087,12 @@ var defaultSites = {
   "The Hindu (not epaper)": {
     domain: "thehindu.com",
     allow_cookies: 1,
-    block_regex: /(\.cxense\.com\/|\.piano\.io\/xbuilder\/experience\/execute|\.ampproject\.org\/v0\/amp-subscriptions-.+\.js)/
+    block_regex: /(\.cxense\.com\/|\.piano\.io\/|\.ampproject\.org\/v0\/amp-subscriptions-.+\.js)/
   },
   "The Hindu BusinessLine (not epaper)": {
     domain: "thehindubusinessline.com",
     allow_cookies: 1,
-    block_regex: /(\.cxense\.com\/|\.piano\.io\/xbuilder\/experience\/execute|\.ampproject\.org\/v0\/amp-subscriptions-.+\.js)/
+    block_regex: /(\.tinypass\.com\/|\.ampproject\.org\/v0\/amp-subscriptions-.+\.js)/
   },
   "The Independent (UK & USA)": {
     domain: "###_uk_independent",
@@ -3086,12 +3106,7 @@ var defaultSites = {
   "The Indian Express": {
     domain: "indianexpress.com",
     allow_cookies: 1,
-    block_regex: /(\/indianexpress\/js\/evolok\/|\.fewcents\.co\/.+\/paywall.*\.js|\.ampproject\.org\/v0\/amp-access-.+\.js)/
-  },
-  "The Information (news only; fetch from archive.is)": {
-    domain: "theinformation.com",
-    allow_cookies: 1,
-    cs_dompurify: 1
+    block_regex: /\.ampproject\.org\/v0\/amp-access-.+\.js/
   },
   "The Intercept (regwall)": {
     domain: "theintercept.com",
@@ -3184,7 +3199,9 @@ var defaultSites = {
   "The New Statesman": {
     domain: "newstatesman.com",
     allow_cookies: 1,
-    block_regex: /\.piano\.io\//
+    block_regex: /(\.piano\.io\/|magazine\.newstatesman\.com\/pugpig-websmartbanner\.js)/,
+    cs_all_frames: 1,
+    cs_dompurify: 1
   },
   "The New World (UK)": {
     domain: "thenewworld.co.uk",
@@ -3206,9 +3223,9 @@ var defaultSites = {
     block_regex: /(\.nytimes\.com\/(meter\.js|svc\/onsite-messaging\/query)|mwcm\.nyt\.com\/.+\.js|cooking\.nytimes\.com\/api\/.+\/access)/,
     useragent_custom: "Mozilla/5.0 (compatible; Google-InspectionTool/1.0)"
   },
-  "The News Lens": {
-    allow_cookies: 1,
-    domain: "thenewslens.com"
+  "The News Lens (JP)": {
+    domain: "thenewslens.com",
+    allow_cookies: 1
   },
   "The News Minute": {
     domain: "thenewsminute.com",
@@ -3226,7 +3243,7 @@ var defaultSites = {
   "The Philadelphia Inquirer": {
     domain: "inquirer.com",
     allow_cookies: 1,
-    block_regex: /(\.tinypass\.com\/|js\.matheranalytics\.com\/)/
+    block_regex: /\.sophi\.io\//
   },
   "The Point Magazine": {
     domain: "thepointmag.com",
@@ -3237,20 +3254,15 @@ var defaultSites = {
     allow_cookies: 1,
     cs_dompurify: 1
   },
-  "The Salt Lake Tribune": {
-    domain: "sltrib.com",
-    allow_cookies: 1,
-    block_regex: /\.tinypass\.com\//
-  },
   "The San Francisco Standard": {
     domain: "sfstandard.com",
-    remove_cookies_select_drop: ["zephr-session"],
-    cs_clear_lclstrg: 1,
-    block_regex: /\/sfstandard\.com\/api\/content\/decision/
+    remove_cookies_select_drop: ["sfs-experiment-bucketing"],
+    useragent: "googlebot"
   },
-  "The Saturday Paper": {
+  "The Saturday Paper (AU)": {
     domain: "thesaturdaypaper.com.au",
-    block_regex: /\.thesaturdaypaper\.com\.au\/sites\/all\/modules\/custom\/node_meter\/pw\.js/
+    allow_cookies: 1,
+    block_regex: /\.thesaturdaypaper\.com\.au\/api\/tinypass\.min\.js/
   },
   "The Scientist (archive)": {
     domain: "the-scientist.com",
@@ -3291,11 +3303,16 @@ var defaultSites = {
       }
     ]
   },
+  "The Star.co.ke": {
+    domain: "the-star.co.ke",
+    allow_cookies: 1
+  },
   "The Sun Group (UK)": {
     domain: "###_uk_thesun",
     group: [
       "thescottishsun.co.uk",
-      "thesun.co.uk"
+      "thesun.co.uk",
+      "thesun.ie"
     ],
     allow_cookies: 1,
     block_regex: "\\.{domain}\\/zephr\\/feature"
@@ -3360,6 +3377,16 @@ var defaultSites = {
     domain: "timeshighereducation.com",
     allow_cookies: 1
   },
+  "Times of India": {
+    domain: "timesofindia.indiatimes.com",
+    allow_cookies: 1,
+    block_js_inline: /timesofindia\.indiatimes\.com\/.+\.cms\?rel=plus/,
+    cs_dompurify: 1
+  },
+  "Tom's Hardware": {
+    domain: "tomshardware.com",
+    allow_cookies: 1
+  },
   "Tribune Publishing Company": {
     domain: "###_usa_tribune",
     group: [
@@ -3391,15 +3418,22 @@ var defaultSites = {
   "UOL.com.br": {
     domain: "uol.com.br",
     allow_cookies: 1,
-    block_regex: /(paywall\.folha\.uol\.com\.br\/|\.(tinypass|matheranalytics)\.com\/|\.ampproject\.org\/v0\/amp-subscriptions-.+\.js)/,
-    useragent: "googlebot"
+    block_regex: /(paywall\.folha\.uol\.com\.br\/|\.(tinypass|matheranalytics)\.com\/|\.poool\.fr\/|\.ampproject\.org\/v0\/amp-subscriptions-.+\.js)/,
+    useragent: "googlebot",
+    headers_filter: /\.folha\.uol\.com\.br\//
   },
   "USA Today": {
     domain: "usatoday.com",
     allow_cookies: 1,
-    useragent: "googlebot"
+    useragent: "googlebot",
+	headers_filter: /\.usatoday\.com\/.+\/\d{10,}\//
   },
-  "Valeurs Actuelles": {
+  "Vanity Fair Italia": {
+    domain: "vanityfair.it",
+    allow_cookies: 1,
+    block_regex: /\.vanityfair\.it\/[-\w]+$/
+  },
+  "Valeurs Actuelles (text only)": {
     domain: "valeursactuelles.com",
     allow_cookies: 1,
     block_regex: /\.qiota\.com\//
@@ -3424,6 +3458,11 @@ var defaultSites = {
     domain: "vice.com",
     allow_cookies: 1,
     cs_dompurify: 1
+  },
+  "Vibilagare.se": {
+    domain: "vibilagare.se",
+    allow_cookies: 1,
+    useragent: "googlebot"
   },
   "Vikatan": {
     domain: "vikatan.com",
@@ -3450,7 +3489,7 @@ var defaultSites = {
   "Vorarlberg Online": {
     domain: "vol.at",
     allow_cookies: 1,
-    block_regex: /\.tinypass\.com\//,
+    block_regex: /\.piano\.io\//,
     cs_dompurify: 1
   },
   "Vox Media Group": {
@@ -3490,7 +3529,7 @@ var defaultSites = {
   "Weser-Kurier": {
     domain: "weser-kurier.de",
     allow_cookies: 1,
-    block_regex: /(\.piano\.io\/xbuilder\/experience\/execute|\.cxense\.com\/)/
+    block_regex: /\.weser-kurier\.de\/assets\/.+\/wk-bundle\.min\.js/
   },
   "William Reed Group (opt-in to custom sites)": {
     domain: "###_uk_william_reed",
@@ -3504,9 +3543,10 @@ var defaultSites = {
     allow_cookies: 1,
     block_regex: /(\.winnipegfreepress\.com\/(api\/v\d\/auth\/identify|.+\/gdpr\.js)|\.cxense\.com\/)/
   },
-  "WirtschaftsWoche (text only & GST-link)": {
+  "WirtschaftsWoche": {
     domain: "wiwo.de",
-    allow_cookies: 1
+    allow_cookies: 1,
+    useragent: "googlebot"
   },
   "Wonderzine": {
     domain: "wonderzine.com",
@@ -3603,7 +3643,7 @@ var defaultSites = {
   "Leaky Paywall (WordPress plugin)": {
     domain: "###_wp_leaky_paywall",
     group: [],
-    block_regex_general: /\/wp-content\/plugins\/leaky-paywall\/js\/leaky-paywall-cookie\.js/
+    block_regex_general: /\/(wp-content\/plugins\/leaky-paywall\/js\/leaky-paywall-cookie\.js|wp-json\/leaky-paywall\/v\d\/check-restrictions)/
   },
   "MatherAnalytics": {
     domain: "matheranalytics.com",
@@ -3648,7 +3688,7 @@ var defaultSites = {
     domain: "piano.io",
     allow_cookies: 1,
     block_regex_general: /\/xbuilder\/experience\/execute/,
-    excluded_domains: ["piano.io", "automobilwoche.de", "hbr.org", "japantimes.co.jp", "nacion.com"]
+    excluded_domains: ["piano.io", "automobilwoche.de", "frontline.thehindu.com", "hbr.org", "japantimes.co.jp", "nacion.com", "thedispatch.com"]
   },
   "Pico.tools": {
     domain: "pico.tools",
@@ -3725,6 +3765,22 @@ var ext_chromium = !!manifestData.key;
 if (ext_chromium) {
   var ja_title = 'Jeune Afrique (last month only)';
   defaultSites[ja_title]['headers_custom'] = defaultSites[ja_title]['cs_param'];
+  var nyp_title = 'New York Post';
+  defaultSites[nyp_title] = {
+    domain: "nypost.com",
+    group: [
+      "nypost.com",
+      "nypost.djservices.io"
+    ],
+    allow_cookies: 1,
+    block_regex: /\.nypost\.com\/zephr\/feature/,
+    exception: [{
+        domain: "nypost.djservices.io",
+        allow_cookies: 1,
+        headers_custom: defaultSites[nyp_title]['cs_param']
+      }
+    ]
+  };
 }
 
 var defaultSites_grouped_domains = Object.values(defaultSites).filter(function (value) {
@@ -3776,7 +3832,7 @@ var custom_flex_not = {
   "###_de_dfv_medien": ["dfv.de"],
   "###_de_madsack": ["madsack.de", "madsack-medien-campus.de"],
   "###_es_epiberica": ["sport.es", "stilo.es"],
-  "###_wp_leaky_paywall": ["epsilontheory.com", "heisenbergreport.com", "koreapro.org", "nknews.org", "thespanisheye.com", "thewirechina.com", "toolkits.com", "uppereastsite.com"],
+  "###_wp_leaky_paywall": ["koreapro.org", "nknews.org", "theregistrysf.com", "uppereastsite.com"],
   "###_uk_axate.io": ["thecricketer.com", "thinkofx.net"],
   "###_uk_haymarket": ["asianinvestor.net", "classicandsportscar.com", "financeasia.com", "gpbusiness.co.uk", "scmagazineuk.com", "thecorporatetreasurer.com"],
   "###_uk_haymarket_medical": ["mycme.com"],
@@ -3800,6 +3856,7 @@ init_custom_flex_domains();
 
 // sites with no fix (background)
 var ch_media_nofix_domains = ['aargauerzeitung.ch', 'luzernerzeitung.ch', 'tagblatt.ch'];
+var de_mg_pressedruck_nofix_domains = ['allgaeuer-zeitung.de', 'augsburger-allgemeine.de', 'mainpost.de', 'suedkurier.de'];
 var de_westfalen_medien_nofix_domains = ['muensterschezeitung.de', 'westfalen-blatt.de', 'wn.de'];
 var fi_sanoma_nofix_domains = ['aamulehti.fi', 'hs.fi', 'is.fi'];
 var fr_groupe_infopro_nofix_domains = ['centralbanking.com', 'lagazettedescommunes.com', 'risk.net', 'usine-digitale.fr'];
@@ -3809,8 +3866,11 @@ var fr_monde_diplo_nofix_domains = ['editionarabediplo.com', 'eldiplo.org', 'lem
 var it_gedi_nofix_domains = ['gelocal.it', 'huffingtonpost.it', 'limesonline.com'];
 var it_gruppo_nem_nofix_domains = ['corrierealpi.it', 'ilnordest.it', 'ilpiccolo.it', 'mattinopadova.it', 'messaggeroveneto.it', 'nuovavenezia.it', 'tribunatreviso.it'];
 var mx_grupo_reforma_nofix_domains = ['elnorte.com', 'mural.com.mx', 'reforma.com'];
+var nl_mediahuis_regional_nofix_domains = ['dvhn.nl', 'haarlemsdagblad.nl', 'lc.nl', 'leidschdagblad.nl', 'limburger.nl', 'noordhollandsdagblad.nl'];
 var pt_medialivre_nofix_domains = ['cmjornal.pt', 'jornaldenegocios.pt', 'record.pt'];
 var se_bonnier_group_nofix_domains = ['di.se', 'expressen.se'];
+var uk_derivia_nofix_domains = ['fow.com', 'globalcapital.com', 'structuredretailproducts.com'];
 var uk_ft_group_nofix_domains = ['ftchinese.com', 'ftchineselive.com', 'sustainableviews.com', 'thebanker.com'];
+var uk_ft_specialist_nofix_domains = ['agendanews.com', 'boardiq.com', 'financialadvisoriq.com', 'fundfire.com', 'healthpayerspecialist.com', 'ignites.com', 'ignitesasia.com', 'igniteseurope.com', 'lifeannuityspecialist.com', 'pandcspecialist.com'];
 var usa_allcity_network_nofix_domains = ['allchgo.com', 'alldlls.com', 'allphly.com', 'gophnx.com', 'thednvr.com'];
-var nofix_sites = ['11freunde.de', '24.hu', '444.hu', 'abplive.com', 'aerzteblatt.de', 'africa-confidential.com', 'aftonbladet.se', 'agefi.fr', 'allgaeuer-zeitung.de', 'altroconsumo.it', 'americanscientist.org', 'arkansasonline.com', 'arretsurimages.net', 'asahi.com', 'asiatimes.com', 'augsburger-allgemeine.de', 'autocarpro.in', 'aviationweek.com', 'badische-zeitung.de', 'belfasttelegraph.co.uk', 'bisnis.com', 'bloomberglaw.com', 'bloombergtax.com', 'bmj.com', 'bnef.com', 'borsen.dk', 'breakingviews.com', 'breitbart.com', 'bunshun.jp', 'businessinsider.de', 'businesslive.co.za', 'caixin.com', 'caixinglobal.com', 'cambiocolombia.com', 'capital.de', 'catalyst-journal.com', 'cfnews.net', 'chegg.com', 'cieletespace.fr', 'consumerreports.org', 'cookpolitical.com', 'costar.com', 'coursehero.com', 'crunchbase.com', 'dealstreetasia.com', 'defence24.pl', 'delfi.ee', 'denikn.cz', 'deraktionaer.de', 'deutsche-wirtschafts-nachrichten.de', 'die-glocke.de', 'digitimes.com.tw', 'donaukurier.de', 'dorzeczy.pl', 'e24.no', 'echo24.cz', 'eenews.net', 'elnuevodia.com', 'elordenmundial.com', 'epochtimes.se', 'epw.in', 'euractiv.com', 'ewmagazine.nl', 'falter.at', 'finance.si', 'finanz-szene.de', 'forbes.cz', 'franc-tireur.fr', 'gamestar.de', 'gazetaprawna.pl', 'gazeteoksijen.com', 'geo.de', 'golem.de', 'gp.se', 'haufe.de', 'hbr-caijing.com', 'hbrarabic.com', 'hbrfrance.fr', 'hedgehogreview.com', 'heraldo.es', 'hindutamil.in', 'histoire-et-civilisations.com', 'history.org.uk', 'hn.cz', 'hpdetijd.nl', 'hsj.co.uk', 'hvg.hu', 'idnes.cz', 'iex.nl', 'ifre.com', 'ilsecoloxix.it', 'iltalehti.fi', 'indiasworld.in', 'indiatimes.com', 'information.dk', 'intelligentinvestor.com.au', 'investing.com', 'jacobin.com', 'janes.com', 'jazziz.com', 'jn.pt', 'jota.info', 'jyllands-posten.dk', 'kicker.de', 'kleinezeitung.at', 'kommunen.dk', 'krone.at', 'lanouvellerepublique.fr', 'laprovence.com', 'latribune.fr', 'laverita.info', 'lavie.fr', 'lavozdegalicia.es', 'law360.ca', 'law360.co.uk', 'law360.com', 'leconomiste.com', 'ledesk.ma', 'lefilmfrancais.com', 'lesjours.fr', 'lexisnexis.co.uk', 'libertiesjournal.com', 'lindipendente.online', 'lorientlejour.com', 'lr-online.de', 'lz.de', 'mailplus.co.uk', 'main-echo.de', 'mainpost.de', 'malaysiakini.com', 'manager-magazin.de', 'maville.com', 'mediapart.fr', 'micromega.net', 'mlex.com', 'money.it', 'moneycontrol.com', 'moodys.com', 'mopo.de', 'morningstar.com', 'motorsport.com', 'moz.de', 'mt.de', 'mz.de', 'nachrichten.at', 'nationaljournal.com', 'nbr.co.nz', 'nd.nl', 'nejm.org', 'newleftreview.org', 'news24.com', 'newsmax.comac', 'newspapers.com', 'newsroom.co.nz', 'nexojornal.com.br', 'nexos.com.mx', 'next.ink', 'nikkansports.com', 'nikkei.com', 'nn.de', 'noen.at', 'note.com', 'nouvelobs.com', 'oantagonista.com.br', 'ojogo.pt', 'onetz.de', 'oup.com', 'pagina12.com.ar', 'penews.com', 'pff.com', 'politicopro.com', 'politiken.dk', 'postimees.ee', 'pressreader.com', 'publico.pt', 'quechoisir.org', 'racingpost.com', 'rbc.ru', 'reason.com', 'republic.ru', 'rhein-zeitung.de', 'rnz.de', 'rtings.com', 'ruhrnachrichten.de', 'sciencedirect.com', 'scienceshumaines.com', 'seekingalpha.com', 'sn.at', 'springer.com', 'statista.com', 'stimme.de', 'storm.mg', 'streetinsider.com', 'studocu.com', 'substack.com', 'suedostschweiz.ch', 'svd.se', 'swp.de', 't3n.de', 'table.media', 'tabletmag.com', 'taxation.co.uk', 'taxjournal.com', 'telquel.ma', 'tempo.co', 'test.de', 'the-ken.com', 'the-star.co.ke', 'theinitium.com', 'thejakartapost.com', 'thelancet.com', 'themorningcontext.com', 'theparisreview.org', 'thestar.com.my', 'tipranks.com', 'tradingview.com', 'tribunemag.co.uk', 'tt.com', 'tvn24.pl', 'udn.com', 'van-magazin.de', 'van-magazine.com', 'vedomosti.ru', 'vg.no', 'vi.nl', 'volksstimme.de', 'voguescandinavia.com', 'weltwoche.ch', 'weltwoche.de', 'which.co.uk', 'wissenschaft.de', 'worldpoliticsreview.com', 'woz.ch', 'wpolityce.pl', 'wz.de', 'xakep.ru', 'yomiuri.co.jp', 'zaobao.com.sg', 'zerohedge.com', 'zive.cz'].concat(custom_flex_nofix_domains, ch_media_nofix_domains, de_westfalen_medien_nofix_domains, fi_sanoma_nofix_domains, fr_groupe_infopro_nofix_domains, fr_indigo_nofix_domains, fr_jamg_nofix_domains, fr_monde_diplo_nofix_domains, it_gedi_nofix_domains, it_gruppo_nem_nofix_domains, mx_grupo_reforma_nofix_domains, pt_medialivre_nofix_domains, se_bonnier_group_nofix_domains, uk_ft_group_nofix_domains, usa_allcity_network_nofix_domains);
+var nofix_sites = ['11freunde.de', '24.hu', '444.hu', 'aachener-zeitung.de', 'abplive.com', 'aerzteblatt.de', 'africa-confidential.com', 'aftenposten.no', 'aftonbladet.se', 'agefi.fr', 'altroconsumo.it', 'americanscientist.org', 'arkansasonline.com', 'arretsurimages.net', 'asahi.com', 'asiatimes.com', 'autocarpro.in', 'aviationweek.com', 'badische-zeitung.de', 'barrons.com', 'belfasttelegraph.co.uk', 'bgov.com', 'bisnis.com', 'bloomberglaw.com', 'bloombergtax.com', 'bmj.com', 'bnef.com', 'borsen.dk', 'breakingviews.com', 'breitbart.com', 'brill.com', 'bunshun.jp', 'businessinsider.de', 'businesslive.co.za', 'caixin.com', 'caixinglobal.com', 'cambiocolombia.com', 'capital.de', 'catalyst-journal.com', 'cfnews.net', 'chegg.com', 'cieletespace.fr', 'consumerreports.org', 'cookpolitical.com', 'costar.com', 'coursehero.com', 'crunchbase.com', 'dailywire.com', 'dealstreetasia.com', 'defence24.pl', 'delfi.ee', 'denikn.cz', 'deraktionaer.de', 'deutsche-wirtschafts-nachrichten.de', 'die-glocke.de', 'digitimes.com', 'digitimes.com.tw', 'donaukurier.de', 'dorzeczy.pl', 'e24.no', 'echo24.cz', 'eenews.net', 'eliteprospects.com', 'elnuevodia.com', 'elordenmundial.com', 'epochtimes.se', 'etc.se', 'epw.in', 'euractiv.com', 'ewmagazine.nl', 'fd.nl', 'finance.si', 'finansavisen.no', 'finanz-szene.de', 'forbes.cz', 'gamestar.de', 'gazetaprawna.pl', 'gazeteoksijen.com', 'geo.de', 'geopoliticalfutures.com', 'golem.de', 'gp.se', 'haufe.de', 'hbr-caijing.com', 'hbrarabic.com', 'hbrfrance.fr', 'hedgehogreview.com', 'heraldo.es', 'hindutamil.in', 'histoire-et-civilisations.com', 'history.org.uk', 'hn.cz', 'hpdetijd.nl', 'hsj.co.uk', 'humanite.fr', 'hvg.hu', 'ideas.tikvah.org', 'idnes.cz', 'iex.nl', 'ifre.com', 'independent.ie', 'ilsecoloxix.it', 'iltalehti.fi', 'indiasworld.in', 'information.dk', 'intelligentinvestor.com.au', 'investing.com', 'jacobin.com', 'janes.com', 'jazziz.com', 'jn.pt', 'jota.info', 'jungefreiheit.de', 'jutarnji.hr', 'jyllands-posten.dk', 'kicker.de', 'kleinezeitung.at', 'kommunen.dk', 'krone.at', 'lanouvellerepublique.fr', 'laprovence.com', 'latribune.fr', 'laverita.info', 'lavie.fr', 'lavozdegalicia.es', 'law360.ca', 'law360.co.uk', 'law360.com', 'leconomiste.com', 'ledesk.ma', 'lefilmfrancais.com', 'lesjours.fr', 'lexisnexis.co.uk', 'libertiesjournal.com', 'lindipendente.online', 'lloydslist.com', 'lorientlejour.com', 'lr-online.de', 'mailplus.co.uk', 'main-echo.de', 'mainichi.jp', 'malaysiakini.com', 'manager-magazin.de', 'marianne.net', 'maville.com', 'mediapart.fr', 'micromega.net', 'mlex.com', 'mnimarkets.com', 'money.it', 'moneycontrol.com', 'moodys.com', 'mopo.de', 'morningstar.com', 'motorsport.com', 'moz.de', 'mt.de', 'mz.de', 'nachrichten.at', 'natgeo.nikkeibp.co.jp', 'nationaljournal.com', 'nbr.co.nz', 'nejm.org', 'newleftreview.org', 'news24.com', 'newsmax.comac', 'newspapers.com', 'newsroom.co.nz', 'nexojornal.com.br', 'nexos.com.mx', 'next.ink', 'ngalarabiya.com', 'nikkansports.com', 'nikkei.com', 'nn.de', 'noen.at', 'note.com', 'nouvelobs.com', 'oantagonista.com.br', 'odt.co.nz', 'ojogo.pt', 'on3.com', 'onetz.de', 'oup.com', 'pagina12.com.ar', 'penews.com', 'pff.com', 'piratewires.com', 'politicopro.com', 'politiken.dk', 'politis.fr', 'postimees.ee', 'pressreader.com', 'publico.pt', 'quechoisir.org', 'racingpost.com', 'rbc.ru', 'reason.com', 'republic.ru', 'rhein-zeitung.de', 'riffreporter.de', 'rnz.de', 'rtings.com', 'ruhrnachrichten.de', 'sankei.com', 'sciencedirect.com', 'scienceshumaines.com', 'seekingalpha.com', 'slobodnadalmacija.hr', 'sn.at', 'spacenews.com', 'sponichi.co.jp', 'springer.com', 'statista.com', 'stimme.de', 'storm.mg', 'streetinsider.com', 'studocu.com', 'substack.com', 'suedostschweiz.ch', 'svd.se', 'swp.de', 't3n.de', 'table.media', 'tabletmag.com', 'taxation.co.uk', 'taxjournal.com', 'telquel.ma', 'tempo.co', 'test.de', 'the-ken.com', 'theinformation.com', 'theinitium.com', 'thejakartapost.com', 'thelancet.com', 'themorningcontext.com', 'theparisreview.org', 'thestar.com.my', 'tipranks.com', 'tradingview.com', 'tribunemag.co.uk', 'tt.com', 'tvn24.pl', 'udn.com', 'valueresearchonline.com', 'van-magazin.de', 'van-magazine.com', 'vedomosti.ru', 'vg.no', 'vi.nl', 'volksstimme.de', 'voguescandinavia.com', 'weltwoche.ch', 'weltwoche.de', 'which.co.uk', 'wissenschaft.de', 'worldpoliticsreview.com', 'woz.ch', 'wpolityce.pl', 'wz.de', 'xakep.ru', 'yomiuri.co.jp', 'zaobao.com.sg', 'zerohedge.com', 'zive.cz', 'zvw.de'].concat(custom_flex_nofix_domains, ch_media_nofix_domains, de_mg_pressedruck_nofix_domains, de_westfalen_medien_nofix_domains, fi_sanoma_nofix_domains, fr_groupe_infopro_nofix_domains, fr_indigo_nofix_domains, fr_jamg_nofix_domains, fr_monde_diplo_nofix_domains, it_gedi_nofix_domains, it_gruppo_nem_nofix_domains, mx_grupo_reforma_nofix_domains, nl_mediahuis_regional_nofix_domains, pt_medialivre_nofix_domains, se_bonnier_group_nofix_domains, uk_derivia_nofix_domains, uk_ft_group_nofix_domains, uk_ft_specialist_nofix_domains, usa_allcity_network_nofix_domains);

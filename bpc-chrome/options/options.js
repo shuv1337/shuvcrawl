@@ -204,8 +204,8 @@ function closeButton() {
 }
 
 function check_sites_updated() {
-  // Remote auto-update disabled
-  return;
+  ext_api.runtime.sendMessage({request: 'check_sites_updated'});
+  location.reload();
 }
 
 function clear_sites_updated() {

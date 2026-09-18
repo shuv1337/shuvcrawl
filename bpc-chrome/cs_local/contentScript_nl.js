@@ -4,7 +4,6 @@ var be_mediahuis_domains = ['gva.be', 'hbvl.be', 'nieuwsblad.be', 'standaard.be'
 var be_roularta_domains = ['beleggersbelangen.nl', 'femmesdaujourdhui.be', 'flair.be', 'knack.be', 'kw.be', 'levif.be', 'libelle.be'];
 var nl_dpg_adr_domains = ['ad.nl', 'bd.nl', 'bndestem.nl', 'destentor.nl', 'ed.nl', 'gelderlander.nl', 'pzc.nl', 'tubantia.nl'];
 var nl_dpg_media_domains = ['demorgen.be', 'flair.nl', 'humo.be', 'libelle.nl', 'margriet.nl', 'parool.nl', 'trouw.nl', 'volkskrant.nl'];
-var nl_mediahuis_region_domains = ['gooieneemlander.nl', 'haarlemsdagblad.nl', 'ijmuidercourant.nl', 'leidschdagblad.nl', 'limburger.nl', 'noordhollandsdagblad.nl'];
 
 cs_default = function (bg2csData = '') {
 
@@ -117,12 +116,14 @@ else if (matchDomain(be_mediahuis_domains)) {
     let article_main = document.querySelector(article_sel);
     if (!article_main)
       article_sel = 'article[role="article"] div[id]';
-    getArchive(url, paywall_sel, '', article_sel);
+    let free = pageContains(cs_param.free_sel || 'div[data-testid="paywall-position-sticky-banner-top"]:not(:empty) span', 'gratis');
+    if (!free.length)
+      getArchive(url, paywall_sel, '', article_sel);
     let popup = document.querySelector('div[data-testid="close-popup-button"]');
     if (popup)
       popup.click();
   }, 1500);
-  let ads = 'div[id^="ad_inline-"], div.mh-ad-label';
+  let ads = 'div[id^="ad_inline-"], div.mh-ad-label, div[data-testid="paywall-position-sticky-banner-bottom"], section[data-theme-sponsored-content], div[data-pym-src]';
   hideDOMStyle(ads);
 }
 
@@ -187,17 +188,6 @@ else if (matchDomain('doorbraak.be')) {
   }, 1000);
 }
 
-else if (matchDomain('fd.nl')) {
-  if (window.location.hostname === 'specials.fd.nl') {
-    document.querySelectorAll('div[class^="Opening_contentContainer"], section[class^="ScrollyText_"]').forEach(e => e.style = 'color: white;');
-  }
-  let header = document.querySelector('div.header-placeholder');
-  if (header)
-    header.style.top = 0;
-  let ads = 'div[data-id^="fd-message-"]';
-  hideDOMStyle(ads);
-}
-
 else if (matchDomain('ftm.nl')) {
   let videos = document.querySelectorAll('div.body > div.video-pp');
   for (let video of videos) {
@@ -236,194 +226,21 @@ else if (matchDomain('groene.nl')) {
   }
 }
 
-else if (matchDomain(['lc.nl', 'dvhn.nl']) || document.querySelector('head > link[href*=".ndcmediagroep.nl/"]')) {
-  let paywall = document.querySelector('div.signupPlus, div.pw-wrapper:not(.pw-none');
-  if (paywall && !window.location.pathname.includes('/live-') && dompurify_loaded) {
-    let intro = document.querySelector('div.startPayWall');
-    let html = document.documentElement.outerHTML;
-    if (html.includes('window.__NUXT__=')) {
-      removeDOMElement(paywall, intro);
-      try {
-        let json = html.split('window.__NUXT__=')[1].split('</script>')[0].trim();
-        let json_match = json.includes('type:"article",');
-        if (json_match) {
-          let path_match = window.location.pathname.match(/-(\d+)\./);
-          if (path_match) {
-            let article_id = path_match[1];
-            json_match = json.includes(',id:"' + article_id + '",');
-            if (!json_match) {
-              let path_regex_str = '-' + article_id + '\\.';
-              if (json.match(/[(,]null,/)) {
-                let art_match = json.split(/[(,]null,/)[1].match(new RegExp(path_regex_str, 'g'));
-                json_match = art_match && art_match.length > 1;
-              }
-              if (!json_match) {
-                if (json.includes(',routePath:"')) {
-                  json_match = json.split(',routePath:"')[1].split('"')[0].match(new RegExp(path_regex_str));
-                } else if (json.includes(',relativeUrl:"')) {
-                  let json_split = json.split(',relativeUrl:"');
-                  json_match = json_split.some(e => e.split(/[",]/)[0].match(new RegExp(path_regex_str)));
-                }
-              }
-            }
-          }
-        }
-        if (!json_match)
-          refreshCurrentTab();
-        else if (json.includes(',body:')) {
-          let nuxt_vars = json.split(/^\(function\(/)[1].split('){')[0].split(',');
-          let nuxt_values = json.split('}}(')[1].split('));')[0].replace(/(^|,)(true|false|\.?\d+|{}),/g, ',"$1$2",').replace(/(^|,)(null),/g, ',"$1$2",').replace(/,(void\s\d),/g, ',"$1",').split(/\\?",\\?"/);
-          function findNuxtText(str, attributes = false) {
-            if (nuxt_vars.length && nuxt_values.length && !(attributes && str.length === 1 && str === str.toUpperCase())) {
-              let index = nuxt_vars.indexOf(str);
-              if (nuxt_values[index])
-                str = nuxt_values[index].replace(/\\u002F/g, '/');
-            }
-            return str;
-          }
-          let intro;
-          let intro_match = json.match(/,leadtext_raw:"([^"]+)",/);
-          let intro_meta_dom = document.querySelector('head > meta[data-hid="description"][content]');
-          if (intro_match || intro_meta_dom) {
-            intro = document.createElement('p');
-            intro.innerText = intro_match ? intro_match[1].replace(/\\u002F/g, '/') : intro_meta_dom.content;
-            intro.style = 'font-weight: bold;';
-          }
-          let json_text = json.split(',body:')[1].split(/,(leadText|brand_key|tts|pianoKeywords):/)[0].replace(/([{,])(\w+)(?=:(["\{\[]|[\w$]{1,2}[,\}]))/g, "$1\"$2\"").replace(/(Image\\":)(\d)([,}])/g, '$1\\"$2\\"$3').replace(/\":(\[)?([\w\$\.]+)([\]},])/g, "\":$1\"$2\"$3");
-          let article = document.querySelector('div.content');
-          if (article) {
-            article.innerHTML = '';
-            if (intro)
-              article.appendChild(intro);
-            let pars = JSON.parse(json_text);
-            function addParText(elem, par_text, add_br = false, attributes = false) {
-              if (par_text) {
-                if (par_text.length <= 2)
-                  par_text = findNuxtText(par_text, attributes);
-                let span = document.createElement('span');
-                span.innerText = par_text.replace(/\u00a0/g, ' '); //&nbsp;
-                elem.appendChild(span);
-                if (add_br)
-                  elem.appendChild(document.createElement('br'));
-              }
-            }
-            function addLink(elem, link_text, href, add_br = false) {
-              let par_link = document.createElement('a');
-              par_link.href = href;
-              par_link.innerText = link_text.replace(/(\\n|\\t|\s)+$/g, '');
-              elem.appendChild(par_link);
-              if (add_br)
-                elem.appendChild(document.createElement('br'));
-            }
-            function addImage(elem, child) {
-              let figure = document.createElement('figure');
-              let img = document.createElement('img');
-              if (child.relation.href.length <= 2)
-                child.relation.href = findNuxtText(child.relation.href);
-              img.src = child.relation.href;
-              figure.appendChild(img);
-              if (child.relation.caption) {
-                if (child.relation.caption.length <= 2)
-                  child.relation.caption = findNuxtText(child.relation.caption).replace(/\\"/g, '"').replace(/\\n/g, ' - ').replace(/\\u002F/g, '/');
-                if (child.relation.photographer) {
-                  if (child.relation.photographer.length <= 2)
-                    child.relation.photographer = findNuxtText(child.relation.photographer).replace(/\\u002F/g, '/');
-                  child.relation.caption += ' - ' + child.relation.photographer;
-                }
-                let caption = document.createElement('figcaption');
-                caption.innerText = child.relation.caption;
-                figure.appendChild(caption);
-              }
-              elem.appendChild(figure);
-            }
-            function addChildren(elem, children, add_br = false, attributes = false) {
-              for (let child of children) {
-                if (child.text) {
-                  addParText(elem, child.text, add_br, attributes);
-                } else if (child.relation && (child.type === 'img' || child.relation.caption) && child.relation.href) {
-                  let img_par = document.createElement('p');
-                  addImage(img_par, child);
-                  elem.appendChild(img_par);
-                } else if (child.relation && child.relation.link) {
-                  if (child.relation.link.length <= 2)
-                    child.relation.link = findNuxtText(child.relation.link).replace(/\\u002F/g, '/');
-                  if (child.relation.title.length <= 2)
-                    child.relation.title = findNuxtText(child.relation.title);
-                  addLink(elem, child.relation.title, child.relation.link);
-                } else if (child.children) {
-                  if (child.children.length) {
-                    for (let item of child.children) {
-                      if (item.text) {
-                        if ((child.href && child.href.length > 2) || (child.relation && child.relation.follow && child.relation.follow.url)) {
-                          if (item.text.length > 2)
-                            addLink(elem, item.text, child.href || child.relation.follow.url, add_br);
-                        } else
-                          addParText(elem, item.text, add_br, child.attributes && child.attributes.length);
-                      } else if (findNuxtText(item.type) === 'br') {
-                        elem.appendChild(document.createElement('br'));
-                      } else
-                        addChildren(elem, item.children, false, item.attributes && item.attributes.length);
-                    }
-                  } else
-                    elem.appendChild(document.createElement('br'));
-                }
-              }
-            }
-            for (let par of pars) {
-              let elem = document.createElement('p');
-              if (par.code) {
-                if (par.code.includes('flourish-embed') && par.code.includes(' data-src=\"')) {
-                  elem = document.createElement('div');
-                  let sub_elem = document.createElement('iframe');
-                  sub_elem.src = 'https://public.flourish.studio/' + par.code.split(' data-src=\"')[1].split('"')[0];
-                  sub_elem.style = 'width: 100%; height: 600px;';
-                  elem.appendChild(sub_elem);
-                } else {
-                  let parser = new DOMParser();
-                  let doc = parser.parseFromString('<div>' + DOMPurify.sanitize(par.code, dompurify_options) + '</div>', 'text/html');
-                  elem = doc.querySelector('div');
-                }
-              } else if (par.insertbox_head || par.insertbox_text) {
-                if (par.insertbox_head && par.insertbox_head.length > 2)
-                  addParText(elem, par.insertbox_head, true);
-                if (par.insertbox_text) {
-                  for (let item of par.insertbox_text) {
-                    if (item.children)
-                      addChildren(elem, item.children, true);
-                  }
-                }
-              } else if (par.text) {
-                if (findNuxtText(par.type) !== 'streamer')
-                  addParText(elem, par.text);
-              } else if (par.children) {
-                addChildren(elem, par.children);
-              } else if (par.typename.length > 2)
-                console.log(par);
-              if (elem.hasChildNodes()) {
-                article.appendChild(elem);
-              }
-            }
-          }
-        }
-      } catch (err) {
-        console.log(err);
-      }
-    }
-  }
-  let ads = 'div.top__ad, div.marketingblock-article';
-  hideDOMStyle(ads);
-}
-
 else if (matchDomain('linda.nl')) {
   window.setTimeout(function () {
+    let premium_sel = cs_param.premium_sel || 'div#article div[class$="premiumlabel" i], article.premium-article_container';
+    let premium = window.location.pathname.startsWith('/premium/') || document.querySelector(premium_sel);
     let article_sel = cs_param.article_sel || 'div.premium-article_main-content, div.article-content_htmlContent';
     let article = document.querySelector(article_sel);
-    if (article && dompurify_loaded) {
+    if (premium && article && dompurify_loaded) {
+      let paywall_sel = cs_param.paywall_sel || 'div.premium-login-box_loginBox';
+      hideDOMStyle(paywall_sel);
+      let fade = document.querySelector('div[class*="_loginRequired"]');
+      if (fade)
+        fade.className = article.className.replace(/[-\w]+_loginRequired/, '');
       let pars = article.querySelectorAll('p');
       if (pars.length > 5)
         return;
-      let paywall_sel = cs_param.paywall_sel || 'div.premium-login-box_loginBox';
-      hideDOMStyle(paywall_sel);
       let filter = /^window\.__INITIAL_PROPS__\s?=\s?/;
       let json_script = getSourceJsonScript(filter);
       if (json_script) {
@@ -437,9 +254,6 @@ else if (matchDomain('linda.nl')) {
               function replace_also_read(str) {
                 return str.replace(/{also-read title="([^}]+)" url="([^}]+)" [^}]+"}/g, "<div style='margin: 15px 0px'><a href=\"$2\">Lees ook: $1</a></div>");
               }
-              let fade = document.querySelector('div[class*="_loginRequired"]');
-              if (fade)
-                fade.className = article.className.replace(/[-\w]+_loginRequired/, '');
               if (json.viewData.article.modules) {
                 let modules = json.viewData.article.modules;
                 article.innerHTML = '';
@@ -494,25 +308,31 @@ else if (matchDomain('linda.nl')) {
   }, 1000);
 }
 
+else if (matchDomain('nationalgeographic.nl')) {
+  let ads = 'div#gpt-leaderboard-ad, .breaker-ad:is(div, section)';
+  hideDOMStyle(ads);
+}
+
+else if (matchDomain('nd.nl')) {
+  hideDOMStyle('div.page-header__slideover, div.page-header__submenu, div[class^="banner-"]');
+}
+
 else if (matchDomain(nl_dpg_adr_domains.concat(['hln.be']))) {
   func_post = function () {
     let article = document.querySelector(article_sel);
     if (article) {
       if (mobile) {
-        document.querySelectorAll('div[style*="grid-column-end:"]').forEach(e => e.style.width = article.offsetWidth + 'px');
+        article.querySelectorAll('div[style*="grid-column-end:"]').forEach(e => e.style.width = article.offsetWidth + 'px');
       }
-      let shades = article.querySelectorAll('div[style*="background-color"][style*=";width"]');
-      for (let elem of shades)
-        elem.style.width = '85%';
-      let lazy_images = article.querySelectorAll('img[loading="lazy"][style]');
+      article.querySelectorAll('div[style*="background-color:"][style*="width:"]:not(:has(> figure))').forEach(e => e.style.width = '85%'); //shades
+      let lazy_images = article.querySelectorAll('img[loading="lazy"][style]:not([style*=";min-width:38px;"])');
       for (let elem of lazy_images) {
         elem.style = 'width: 95%;';
-        if (elem.parentNode.style && elem.parentNode.getAttribute('style').includes('min-height:')) {
+        let parent_style = elem.parentNode.getAttribute('style');
+        if (parent_style && parent_style.includes('min-height:')) {
           elem.parentNode.removeAttribute('style');
           elem.parentNode.parentNode.removeAttribute('style');
         }
-        if ((!elem.src || elem.src.startsWith('data:image/')) && elem.getAttribute('currentsourceurl'))
-          elem.src = elem.getAttribute('currentsourceurl');
       }
       let widgets = article.querySelectorAll('div > div > div[old-src]:not([src])');
       for (let elem of widgets) {
@@ -536,9 +356,9 @@ else if (matchDomain(nl_dpg_adr_domains.concat(['hln.be']))) {
         elem.parentNode.removeAttribute('style');
         removeDOMElement(elem);
       }
-      let video_buttons = article.querySelectorAll('button[type="button"]');
+      let video_buttons = article.querySelectorAll('div > button[type="button"]');
       removeDOMElement(...video_buttons);
-      if (header_img && !article.querySelector('header figure, figure > div > svg'))
+      if (header_img && !article.querySelector('header figure, article > figure, figure > div > svg'))
         article.firstChild.before(header_img);
       if (comments)
         article.appendChild(comments);
@@ -548,7 +368,10 @@ else if (matchDomain(nl_dpg_adr_domains.concat(['hln.be']))) {
     let article_divs = document.querySelectorAll(article_sel + ' > div:not(:empty)');
     if (article_divs.length < 3)
       article.before(googleSearchToolLink(url));
-    let ads = 'span[style*="background-color:"]:has(> span[style*="min-height:"]), span > br, ' + article_sel + ' div:empty:not([class])';
+    let premium_label = article.querySelector('svg[aria-label="Premium artikel"]');
+    if (premium_label)
+      premium_label.style = 'width: 10%;';
+    let ads = 'span[style*="background-color:"]:has(> span[style*="min-height:"]), span > br, ' + article_sel + ' div:empty:not([class]), div[style*=";isolation:isolate;"], a[href^="https://www.google.com/preferences/source"]';
     hideDOMStyle(ads, 2);
   }
   let header_img = document.querySelector('div[data-content-type="MEDIA_TOP"]');
@@ -556,7 +379,7 @@ else if (matchDomain(nl_dpg_adr_domains.concat(['hln.be']))) {
   let readmore = document.querySelector('div[data-content-type="CROSS_PROMOTION"]');
   let url = window.location.href;
   let article_sel = cs_param.article_sel || 'article';
-  let paywall_sel = cs_param.paywall_sel || article_sel + ' div[data-content-type="MEDIA_TOP"] svg.premium-indicator';
+  let paywall_sel = cs_param.paywall_sel || article_sel + ' svg.premium-indicator[class*="article-premium-indicator-"]';
   let paywall_action = {rm_class: 'premium-indicator'};
   if (window.location.pathname.includes('~') && !document.querySelector(paywall_sel)) { // regwall
     let pars = document.querySelectorAll(article_sel + ' div[data-content-type="PARAGRAPH"]');
@@ -573,58 +396,8 @@ else if (matchDomain(nl_dpg_adr_domains.concat(['hln.be']))) {
 }
 
 else if (matchDomain(nl_dpg_media_domains)) {
-  let banners = 'aside[data-temptation-position^="ARTICLE_"], div[data-temptation-position^="PAGE_"], div[class^="ad--"], div[id^="article_paragraph_"]';
+  let banners = 'aside[data-temptation-position^="ARTICLE_"], div[data-temptation-position^="PAGE_"], div[class^="ad--"], div[id^="article_paragraph_"], div[data-advert-orig-id], div[class$="1-container"]';
   hideDOMStyle(banners);
-}
-
-else if (matchDomain(nl_mediahuis_region_domains)) {
-  let video = document.querySelector('div.video, div[data-testid="article-video"]');
-  func_post = function () {
-    let article = document.querySelector(article_sel);
-    if (article) {
-      if (video) {
-        let video_new = article.querySelector('div[id$="-streamone"], div[id^="video-player-"], div[id^="player_"]');
-        if (video_new && video_new.parentNode)
-          video_new.parentNode.replaceChild(video, video_new);
-        else {
-          let header = article.querySelector('h1');
-          let br = document.createElement('br');
-          if (header)
-            header.after(br, video, br);
-        }
-      }
-      article.querySelectorAll('hgroup, section:not(:empty)').forEach(e => e.style = 'width: 95%;');
-      if (mobile) {
-        let div_next = document.querySelector('div[id="__next"]');
-        if (div_next)
-          article.style.width = div_next.offsetWidth - 20 + 'px';
-        article.querySelectorAll('figure img[loading="lazy"][style]').forEach(e => e.style = 'width: 95%;');
-        let figures = article.querySelectorAll('figure div');
-        for (let elem of figures) {
-          elem.removeAttribute('style');
-          let svg = elem.querySelector('svg');
-          removeDOMElement(svg);
-        }
-      }
-      if (article.innerText.length < 1000) {
-        let header = article.querySelector('hgroup');
-        if (header)
-          header.before(googleSearchToolLink(url));
-      }
-    }
-  }
-  let paywall_sel = cs_param.paywall_sel || 'head > meta[name$="article_ispaidcontent"][content="true"]';
-  let article_sel = cs_param.article_sel || 'main > article';
-  let url = window.location.href;
-  getArchive(url, paywall_sel, '', article_sel);
-  window.setTimeout(function () {
-    let noscroll_sel = cs_param.noscroll_sel || 'body[style*="popover-top-position:"]';
-    let noscroll = document.querySelector(noscroll_sel);
-    if (noscroll)
-      noscroll.style = 'position: static !important; overflow: visible !important';
-  }, 500);
-  let ads = 'div.mh-ad-label';
-  hideDOMStyle(ads);
 }
 
 else if (matchDomain('nrc.nl')) {
@@ -634,7 +407,7 @@ else if (matchDomain('nrc.nl')) {
 
 else if (matchDomain('telegraaf.nl')) {
   func_post = function () {
-    let article = document.querySelector('article');
+    let article = document.querySelector(article_sel);
     if (article) {
       if (mobile) {
         let body = document.querySelector('body');
@@ -646,6 +419,7 @@ else if (matchDomain('telegraaf.nl')) {
             elem.parentNode.style['min-height'] = 'auto';
           }
         }
+        article.querySelectorAll('section[style*=";width:"]').forEach(e => e.removeAttribute('style'));
       }
       let gallery, img_width, captions, next, next_images, next_img_width;
       let gallery_new = document.createElement('div');
@@ -723,20 +497,24 @@ else if (matchDomain('telegraaf.nl')) {
         elem.parentNode.replaceChild(elem_new, elem);
       }
       document.querySelectorAll('div > div[style^="min-height:"] > div[id^="player_"]').forEach(e => hideDOMElement(e.parentNode.parentNode));
-      let pars = document.querySelectorAll('article section > div[style*="font-family:"]:not(:empty)');
-      if (pars.length < 5)
-        article.after(googleSearchToolLink(url));
+      let ads = article_sel + ' div:empty';
+      hideDOMStyle(ads, 2);
     }
   }
   let url = window.location.href.split(/[#\?]/)[0];
+  let article_sel = cs_param.article_sel || 'article';
   window.setTimeout(function () {
     let paywall_sel = cs_param.paywall_sel || 'div[data-testid="paywall-position-popover"]:not(:empty)';
     let paywall = document.querySelector(paywall_sel);
     if (paywall) {
       if (window.location.pathname.startsWith('/video/') && document.querySelector('div[data-testid="article-video"]'))
         removeDOMElement(paywall);
-      else
-        getArchive(url, paywall_sel, '', 'article');
+      else {
+        let article = document.querySelector('main');
+        if (article)
+          article.before(googleSearchToolLink(url));
+        getArchive(url, paywall_sel, '', article_sel);
+      }
       let noscroll = document.querySelector('body[class]');
       if (noscroll)
         noscroll.removeAttribute('class');
@@ -753,10 +531,12 @@ else if (matchDomain('tijd.be')) {
     let url = window.location.href;
     let nofix_msg = 'BPC > no data yet (refresh page)';
     if (matchDomain('belegger.tijd.be')) {
-      let paywall = document.querySelector('html.paywalled');
+      window.setTimeout(function () {
+      let paywall = document.querySelector(cs_param.paywall_sub_sel || 'div[class*="_paywallContainer"]');
       if (paywall) {
-        paywall.classList.remove('paywalled');
-        let article = document.querySelector('main div.row > div');
+        removeDOMElement(paywall);
+		let article_sel = cs_param.article_sub_sel || 'div[class*="_articleBodyCenter"]';
+        let article = document.querySelector(article_sel);
         if (article) {
           let authorization = mediafin_get_auth();
           if (authorization) {
@@ -768,16 +548,13 @@ else if (matchDomain('tijd.be')) {
             article.before(googleSearchToolLink(url));
           }
         }
+        addStyle('body {overflow: auto !important} ' + article_sel + ' {margin: 20px 0px;}');
+        let banner = document.querySelector('div[data-id="react-paywall-auth0"]');
+        removeDOMElement(banner);
       }
-      addStyle('body {overflow: auto !important} ' + 'main div.row > div p {margin: 20px 0px}');
-      let banner = document.querySelector('div[data-id="react-paywall-auth0"]');
-      removeDOMElement(banner);
-    } else {
-      window.setTimeout(function () {
-        let close_button = document.querySelector('button.ds-modal__top-bar__closebutton');
-        if (close_button)
-          close_button.click();
       }, 1000);
+    } else {
+      hideDOMStyle('div.ds-modal-wrapper');
       let paywall = document.querySelector('html.paywall-active');
       if (paywall) {
         paywall.classList.remove('paywall-active');

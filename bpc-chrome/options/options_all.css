@@ -1,9 +1,13 @@
+html, body {
+  font-size: 100%;
+  padding-left: 0.5em;
+  padding-right: 0.5em;
+}
+
 #bypass_sites label, #add_site label, #excluded_sites label {
   display: block;
 }
-body {
-  font-size: 100%;
-}
+
 * {
   box-sizing: border-box;
 }

@@ -1,7 +1,7 @@
 //"use strict";
 var ext_api = chrome || browser;
 var ext_chromium = window.navigator.userAgent.toLowerCase().includes('chrome');
-if (ext_api.runtime) {
+if (ext_api.runtime && ext_api.storage) {
   var manifestData = ext_api.runtime.getManifest();
   ext_chromium = !!manifestData.key;
 }
@@ -14,6 +14,7 @@ var data_ext_fetch = [];
 var data_ext_fetch_id = 0;
 var csDone;
 var csDoneOnce;
+var runOnce;
 var cs_param = {};
 var dompurify_loaded = (typeof DOMPurify === 'function');
 var dompurify_options = {ADD_TAGS: ['amp-img', 'embed', 'iframe', 'list'], ADD_ATTR: ['allow', 'allowfullscreen', 'frameborder', 'itemprop', 'layout', 'target']};
@@ -310,9 +311,9 @@ if (bg2csData.amp_redirect) {
 function cs_code_elems(elems) {
   for (let elem of elems) {
     if (elem.add_style)
-      addStyle(elem.add_style);
+      addStyle(elem.add_style, 6);
     else if (elem.hide_elem)
-      hideDOMStyle(elem.hide_elem);
+      hideDOMStyle(elem.hide_elem, 6);
     else if (elem.rm_elem_wait)
       waitDOMElement(elem.rm_elem_wait, elem.rm_elem_wait.match(/^\w+/)[0].toUpperCase(), removeDOMElement, true);
     else if (elem.cond) {
@@ -367,7 +368,7 @@ function run_cs_default(bg2csData = '') {
 var msg_once;
 var msg_once_ses;
 var url_old;
-if (ext_api.runtime) {
+if (ext_api.runtime && ext_api.storage) {
   ext_api.runtime.onMessage.addListener(
     function (request, sender) {
     if (request.msg === 'bg2cs') {
@@ -383,7 +384,7 @@ if (ext_api.runtime) {
       if (!(msg_once_ses && url_old === window.location.href)) {
         msg_once_ses = true;
         url_old = window.location.href;
-        replaceDomElementExtSrc(request.data.url, request.data.url_src, request.data.html, true, false, request.data.selector, request.data.text_fail, request.data.selector_source, request.data.selector_archive);
+        replaceDomElementExtSrc(request.data.url, request.data.url_src, request.data.html, true, false, request.data.selector, request.data.text_fail, request.data.selector_source, request.data.selector_archive, request.data.blocked);
       }
     } else if (request.msg === 'showExtFetch') {
       let fetch_id = request.data.data_ext_fetch_id;
@@ -511,7 +512,16 @@ function makeFigure(url, caption_text, img_attrib = {}, caption_attrib = {}) {
   return elem;
 }
 
-function header_nofix(header, cond_sel = '', msg = 'BPC > no fix') {
+function makeLink(url, title, style = '') {
+  let a_link = document.createElement('a');
+  a_link.href = url;
+  a_link.innerText = title;
+  if (style)
+    a_link.style = style;
+  return a_link;
+}
+
+function header_nofix(header, cond_sel = '', msg = 'BPC > no fix', url = '') {
   if (header && typeof header === 'string')
     header = document.querySelector(header);
   if (header && !document.querySelector('div#bpc_nofix')) {
@@ -525,7 +535,15 @@ function header_nofix(header, cond_sel = '', msg = 'BPC > no fix') {
     let nofix_div = document.createElement('div');
     nofix_div.id = 'bpc_nofix';
     nofix_div.style = 'margin: 20px; font-size: 20px; font-weight: bold; color: red;';
-    nofix_div.innerText = msg;
+    if (url) {
+      let url_link = document.createElement('a');
+      url_link.href = url;
+      url_link.innerText = msg;
+      if (!matchUrlDomain(window.location.hostname, url))
+        url_link.target = '_blank';
+      nofix_div.appendChild(url_link);
+    } else
+      nofix_div.innerText = msg;
     header.before(nofix_div);
   }
 }
@@ -577,11 +595,12 @@ function replaceDomElementExt(url, proxy, base64, selector, text_fail = '', sele
     if (archive_match && document.body)
       document.body.firstChild.before(archiveLink(url));
     return;
-  } else if (proxy && !ext_chromium && !bg2csData_fetch) { // fetch consent (Firefox only)
-    let body = document.body || article;
-    header_nofix(body.firstChild, '', 'BPC > opt-in for consent to fetch site content (by external url-request).\r\nSee options > opt-in (new Mozilla Firefox \'data transmission\' consent requirement).');
-    if (archive_match)
-      article.before(archiveLink(url));
+  } else if (proxy && !ext_chromium && !bg2csData_fetch) { //fetch consent (Firefox only)
+    window.setTimeout(function () {
+      header_nofix(article, '', 'BPC > opt-in for consent to fetch site content (by external url-request).\r\nSee options > opt-in (new Mozilla Firefox \'data transmission\' consent requirement).');
+      if (archive_match)
+        article.before(archiveLink(url));
+    }, 1000);
     return;
   }
   if (proxy) {
@@ -616,10 +635,10 @@ function getSelectorLevel(selector) {
   return selector;
 }
 
-function replaceDomElementExtSrc(url, url_src, html, proxy, base64, selector, text_fail = '', selector_source = selector, selector_archive = selector) {
+function replaceDomElementExtSrc(url, url_src, html, proxy, base64, selector, text_fail = '', selector_source = selector, selector_archive = selector, blocked = false) {
   let article = document.querySelector(selector);
   let article_link = document.querySelector(selector_archive);
-  let no_content_msg = '&nbsp;| no article content found! | :';
+  let no_content_msg = ' ~ no article content found! :';
   if (html) {
     if (!proxy && base64) {
       html = decode_utf8(atob(html));
@@ -638,6 +657,7 @@ function replaceDomElementExtSrc(url, url_src, html, proxy, base64, selector, te
         selector_source = getSelectorLevel(selector_source);
       let article_new = doc.querySelector(selector_source);
       if (article_new) {
+        article_new.querySelectorAll('img[src][currentsourceurl]').forEach(e => e.src = e.getAttribute('currentsourceurl'));
         if (article && article.parentNode) {
           if (url.startsWith('https://archive.')) {
             let arch_dom = (selector_archive !== selector) ? (article_new.querySelector(selector_archive) || document.querySelector(selector_archive)) : article_new;
@@ -668,12 +688,7 @@ function replaceDomElementExtSrc(url, url_src, html, proxy, base64, selector, te
         replaceTextFail(url, article_link, proxy, text_fail.replace(':', no_content_msg));
     }, 200);
   } else {
-    replaceTextFail(url, article_link, proxy, url_src ? text_fail.replace(':', no_content_msg) : text_fail);
-    if (false && !url_src && url.includes('/https://www.thetimes.com/')) {
-      let url_orig = 'https:' + url.split('/https:')[1];
-      if (article_link)
-        article_link.before(externalLink(['clearthis.page'], 'https://clearthis.page/?u={url}', encodeURIComponent(url_orig), 'BPC > Try for full article text:'));
-    }
+    replaceTextFail(url, article_link, proxy, url_src ? text_fail.replace(':', no_content_msg) : (blocked ? text_fail.replace(':', ' ~ fetch blocked! :') : text_fail));
   }
 }
 
@@ -937,15 +952,39 @@ function restorePugpigLink(node, art_link_sel = '') {
 
 function restorePugpigPage() {
   let art_link_sel = 'a.pp-widget-article, a.pp-related__link';
-  document.querySelectorAll(art_link_sel).forEach(e => restorePugpigLink(e));
+  window.setTimeout(function () {
+    document.querySelectorAll(art_link_sel).forEach(e => restorePugpigLink(e));
+  }, 2000);
   waitDOMElement(art_link_sel, 'A', restorePugpigLink, true);
   waitDOMElement('li[class^="collection_type-"]', 'LI', node => restorePugpigLink(node, art_link_sel), true);
   csDoneOnce = true;
-  let modal = 'section.modal';
+  let modal = '.modal:is(section, div), div.modal__overlay';
   hideDOMStyle(modal);
-  let paywall = document.querySelector('div.paywall');
+  let audio_tts = document.querySelector('audio.pp-audio__player');
+  if (audio_tts)
+    audio_tts.style = 'display: block !important;';
+  let paywall_sel = 'div.paywall';
+  let paywall = document.querySelector(paywall_sel);
   if (paywall)
     refreshCurrentTab();
+  hideDOMStyle(paywall_sel + ', div.drawer__overlay', 2);
+  if (window.location.pathname.endsWith('/content.html') && window.top === window.self) {
+    let header = document.querySelector('div#home');
+    if (!header) {
+      let article = document.querySelector('div.pp-container');
+      if (article) {
+        let header_new = document.createElement('div');
+        header_new.id = 'home';
+        header_new.style = 'font-size: 20px; font-weight: bold; text-align: center; margin: 20px;';
+        let main = document.createElement('a');
+        let hostname = window.location.hostname;
+        main.href = 'https://' + hostname;
+        main.innerText = hostname.toUpperCase();
+        header_new.appendChild(main);
+        article.before(header_new);
+      }
+    }
+  }
 }
 
 function getArticleQuintype() {
@@ -1070,7 +1109,7 @@ function mediafin_main(url, data, article) {
           let img_item = embedded.images[0];
           let img_ratio = img_item.aspectRatios['16/9'].pop();
           if (img_ratio && img_ratio.url) {
-            let lead_img = makeFigure(img_ratio.url, (img_item.caption || '') + (img_item.credit ? ' ©' + img_item.credit : ''), {}, {style: 'margin: 10px;'});
+            let lead_img = makeFigure(img_ratio.url, (img_item.caption || '') + (img_item.credit ? ' ©' + img_item.credit : ''), {style: 'width: 100%;'}, {style: 'margin: 10px;'});
             article.appendChild(lead_img);
           }
         }
@@ -1095,7 +1134,7 @@ function mediafin_main(url, data, article) {
               if (img_item) {
                 let img_ratio = img_item.aspectRatios[par.aspectRatio].pop();
                 if (img_ratio && img_ratio.url)
-                  elem = makeFigure(img_ratio.url, (img_item.caption || '') + (img_item.credit ? ' ©' + img_item.credit : ''), {}, {style: 'margin: 10px;'});
+                  elem = makeFigure(img_ratio.url, (img_item.caption || '') + (img_item.credit ? ' ©' + img_item.credit : ''), {style: 'width: 100%;'}, {style: 'margin: 10px;'});
               }
             }
           } else if (par.type === 'inlineStory') {
@@ -1348,8 +1387,9 @@ function ads_hide() {
   var overlay = document.querySelector('body.didomi-popup-open');
   if (overlay)
     overlay.classList.remove('didomi-popup-open');
-  var ads = 'div.OUTBRAIN, div[id^="taboola-" i], div.ad-container, div[class*="-ad-container"], div[class*="_ad-container"], div.arc_ad, div[id^="poool-"], amp-ad, amp-embed[type="mgid"], amp-embed[type="outbrain"], amp-embed[type="taboola"]';
+  var ads = 'div.OUTBRAIN, div[id^="taboola-" i], div.ad-container, div[class*="-ad-container"], div[class*="_ad-container"], div.arc_ad, div[id^="poool-"]:empty, amp-ad, amp-embed[type="mgid"], amp-embed[type="outbrain"], amp-embed[type="taboola"]';
   hideDOMStyle(ads, 10);
+  addStyle('@media print {div[id^="bpc_"] {visibility: hidden; margin: 0px;}}', 10);
 }
 
 function leaky_paywall_unhide() {

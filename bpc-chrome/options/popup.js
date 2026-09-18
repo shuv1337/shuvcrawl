@@ -11,7 +11,7 @@ ext_api.tabs.query({
   active: true,
   currentWindow: true
 }, function (tabs) {
-  if (tabs && tabs[0] && ((tabs[0].url === 'about:blank' && tabs[0].title !== 'about:blank') || tabs[0].url === 'https://codebeautify.org/htmlviewer')) {
+  if (tabs && tabs[0] && ((tabs[0].url && ((tabs[0].url === 'about:blank' && tabs[0].title !== 'about:blank') || tabs[0].url.startsWith('https://codebeautify.org/htmlviewer'))) || (!tabs[0].url && ext_chromium && tabs[0].openerTabId))) {
     let tabId = tabs[0].id;
     if (ext_manifest_version === 2) {
       ext_api.tabs.executeScript(tabId, {
@@ -109,7 +109,6 @@ function showArchiveLinks() {
       let url_enc = encodeURIComponent(url);
       let archive_array = {
         'Archive.today': 'https://archive.today?run=1&url=' + url_enc,
-        'Clearthis.page': 'https://clearthis.page?u=' + url_enc,
         'Google Search Tool\n(see help - troubleshooting)': 'https://search.google.com/test/rich-results?url=' + url_enc
       };
       let archive_id = document.querySelector('span#archive');
@@ -119,7 +118,7 @@ function showArchiveLinks() {
           let elem_div = document.createElement('div');
           let elem = document.createElement('a');
           elem.innerText = key;
-          if (!(matchDomain(['clearthis.page', 'google.com'], hostname) || hostname.match(/^archive\.\w{2}$/))) {
+          if (!(matchDomain(['google.com'], hostname) || hostname.match(/^archive\.\w{2}$/))) {
             elem.href = archive_array[key];
             elem.title = elem.href;
             elem.target = '_blank';

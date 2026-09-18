@@ -87,7 +87,7 @@ function import_json(result) {
     var sites_custom_new = JSON.parse(result);
     var customSitesExt_remove = [];
     if (sites_custom_new['###_remove_sites'] && sites_custom_new['###_remove_sites'].cs_code)
-      customSitesExt_remove = sites_custom_new['###_remove_sites'].cs_code.split(/,\s?/);
+      customSitesExt_remove = sites_custom_new['###_remove_sites'].cs_code.split(/,\s*/);
     for (let site in sites_custom_new) {
       let customSite_diff = Object.keys(sites_custom).find(key => sites_custom[key].domain === sites_custom_new[site].domain && key !== site);
       if (customSite_diff)
@@ -126,7 +126,7 @@ function randomInt(max) {
 function import_url_options(e, online) {
   let url = '/custom/sites_custom.json';
   if (online)
-    url = '/custom/sites_custom.json'; // Remote fetch disabled
+    url = 'https://gitflic.ru/project/magnolia1234/bpc_updates/blob/raw?file=sites_custom.json';
   try {
     fetch(url)
     .then(response => {
@@ -515,7 +515,7 @@ function renderOptions() {
     var sites_custom_upd_version = items.sites_custom_upd_version;
     if (sites_custom['###_remove_sites'] && sites_custom['###_remove_sites'].cs_code) {
       let custom_version = '';
-      let match = sites_custom['###_remove_sites'].cs_code.split(/,\s?/).filter(x => x.match(/^###_custom_/));
+      let match = sites_custom['###_remove_sites'].cs_code.split(/,\s*/).filter(x => x.match(/^###_custom_/));
       if (match.length)
         custom_version = match[0].replace('###_custom_', '');
       if (custom_version < sites_custom_upd_version) {

@@ -127,6 +127,14 @@ else if (matchDomain(es_grupo_vocento_domains)) {
           elem.className = 'paywall';
       }
     }
+    hideDOMStyle('figure.paywall2 img', 3);
+    let div_hidden = document.querySelectorAll('article div[hidden]');
+    for (let elem of div_hidden) {
+      elem.removeAttribute('hidden');
+      elem.style = 'display: block !important;';
+    }
+    if (window.location.pathname.match(/[-\/]directo-/) && !document.querySelector('div#firstPost'))
+      header_nofix('article h1');
     let ads = '.voc-advertising, div.voc-ob-wrapper, div.voc-discounts, div.ev-em-modal, span.mega-superior, div.v-adv';
     hideDOMStyle(ads, 2);
   } else {
@@ -257,7 +265,7 @@ else if (matchDomain(['lavanguardia.com', 'mundodeportivo.com'])) {
 }
 
 else if (matchDomain('observador.pt')) {
-  let ads = 'div.obs-ad-placeholder, obs-toaster-seats, obs-moa-btn-seats';
+  let ads = 'div.obs-ad-placeholder, obs-toaster, obs-moa-btn-seats, obs-moa-new';
   hideDOMStyle(ads);
 }
 
@@ -292,7 +300,7 @@ else if (matchDomain('sabado.pt')) {
 else
   csDone = true;
 
-} else if (window.location.hostname.match(/\.(ar|br|cl|mx|pe|uy)$/) || matchDomain(['abcmais.com', 'clarin.com', 'cronista.com', 'elespectador.com', 'elmercurio.com', 'eltiempo.com', 'eltribuno.com', 'eluniverso.com', 'exame.com', 'globo.com', 'lasegunda.com', 'latercera.com', 'milenio.com', 'revistaoeste.com', 'semana.com'])) {//south america
+} else if (window.location.hostname.match(/\.(ar|br|cl|mx|pe|uy)$/) || matchDomain(['abcmais.com', 'clarin.com', 'cronista.com', 'elespectador.com', 'elmercurio.com', 'eltiempo.com', 'eltribuno.com', 'eluniverso.com', 'exame.com', 'globo.com', 'lasegunda.com', 'latercera.com', 'milenio.com', 'nacion.com', 'revistaoeste.com', 'semana.com'])) {//south america
 
 if (matchDomain('abcmais.com')) {
   if (!window.location.pathname.endsWith('/amp/')) {
@@ -617,17 +625,21 @@ else if (matchDomain('exame.com')) {
 }
 
 else if (matchDomain('uol.com.br')) {
-  if (matchDomain('folha.uol.com.br')) {
-    if (matchDomain('piaui.folha.uol.com.br')) {
-      let audio = document.querySelector('div.audio-player-container:has(audio[src])');
+ if (matchDomain('piaui.uol.com.br')) {
+    let audio_cont = document.querySelector('div.audio-player-container:has(audio[src])');
+    if (audio_cont) {
+      let audio = audio_cont.querySelector('audio[src]');
       if (audio) {
         let audio_new = document.createElement('audio');
-        audio_new.src = audio.querySelector('audio').src;
+        audio_new.src = audio.src;
         audio_new.setAttribute('controls', '');
-        audio.parentNode.replaceChild(audio_new, audio);
+        audio_cont.parentNode.replaceChild(audio_new, audio_cont);
       }
-      header_nofix('div.paywall__content', 'div.revista--interna__assineonly', 'BPC > no fix' + (audio ? ' (audio-only)' : ''));
-    } else if (window.location.pathname.startsWith('/amp/')) {
+    }
+    let ads = 'div[class^="piaui-interna-"], div.main__advert';
+    hideDOMStyle(ads, 2);
+  } else if (matchDomain('folha.uol.com.br')) {
+    if (window.location.pathname.startsWith('/amp/')) {
       amp_unhide_subscr_section('amp-sticky-ad');
     } else {
       let signup = document.querySelector('.c-top-signup');
@@ -640,7 +652,7 @@ else if (matchDomain('uol.com.br')) {
       hidden_image.srcset = '';
     }
   }
-  let ads = 'div[class*="advertising"], div.jupiter-ads, div.up-floating, div[data-cp-id$="asfads"], div.ms-hapb, div.ms-apb';
+  let ads = 'div[class*="advertising"], div.jupiter-ads, div.up-floating, div[data-cp-id$="asfads"], div.ms-hapb, div.ms-apb, div.cardAd';
   hideDOMStyle(ads);
 }
 
@@ -698,13 +710,28 @@ else if (matchDomain('lanacion.com.ar')) {
   if (matchDomain('suscripciones.lanacion.com.ar')) {
     let searchParams = new URLSearchParams(window.location.search);
     if (searchParams.get('callback')) {
-      let article_sel = 'main.paywall-container';
+      func_post = function () {
+        let title = document.querySelector('h1');
+        if (title)
+          document.title = title.innerText + ' - LA NACION';
+        let banners = 'header.ds-header, button#btnAudioSignature, div#v-share';
+        hideDOMStyle(banners, 2);
+      }
       let url = atob(searchParams.get('callback')).split('?')[0];
-      getArchive(url, article_sel + '> button', '', article_sel, '', 'div#fusion-app', 'div#wall');
+      getArchive(url, 'main > section > div', '', 'main', '', 'div#fusion-app');
     }
   }
   let ads = 'div.ln-banner-container';
   hideDOMStyle(ads);
+  removeDOMElement(...document.querySelectorAll('div.ds-banner'));
+}
+
+else if (matchDomain('lance.com.br')) {
+  let paywall = document.querySelector('div.paywall-content[class*="h-\["]');
+  if (paywall)
+    removeClassesByPrefix(paywall, 'h-\[');
+  let banners = 'div[class*="backdrop-blur-"], div.shadow-sticky, div[style*="repeating-linear-gradient"], span.mx-2, span.h-px';
+  hideDOMStyle(banners);
 }
 
 else if (matchDomain('lasegunda.com')) {
@@ -743,7 +770,7 @@ else if (matchDomain('lasegunda.com')) {
                       intro.firstChild.before(figure);
                     }
                     function make_fig(p1, p2 = '') {
-                      let result = '<figure style="margin: 15px 0px"><img src="' + p1 + '"><figcaption>' + (p2 ? p2.replace(/^;\s/, '') : '') + '</figcaption></figure>';
+                      let result = '<figure style="margin: 15px 0px"><img src="' + p1 + '"><figcaption>' + (p2 ? p2.replace(/^;\s?/, '') : '') + '</figcaption></figure>';
                       return result;
                     }
                     function make_imagen(match, p1, offset, string) {
@@ -755,9 +782,13 @@ else if (matchDomain('lasegunda.com')) {
                     function make_video(match, p1, offset, string) {
                       return '<video controls src="' + p1 + '" style="width: 100%; margin: 15px 0px;">';
                     }
+                    function make_cifra(match, p1, p2, offset, string) {
+                      return p1 + p2.replace(/^;\s?/, ' ');
+                    }
                     let art_text = art_source.texto.replace(/&nbsp;/g, ' ').replace(/{IMAGEN?\s([^}]+)}/g, make_imagen);
-                    art_text = art_text.replace(/{IMAGENCREDITO\s([^;]+)(;\s[^}]+)}/g, make_imagen_credito);
+                    art_text = art_text.replace(/{IMAGENCREDITO\s([^;]+)(;\s?[^}]+)}/g, make_imagen_credito);
                     art_text = art_text.replace(/{VIDEO?\s([^}]+)}/g, make_video);
+                    art_text = art_text.replace(/{CIFRA\s([^;]+)(;\s?[^}]+)}/g, make_cifra);
                     art_text = art_text.replace(/{CITA[^}]+}/g, '').replace(/{DESTACAR\s/g, '').replace(/}/g, '');
                     if (!art_text.includes('{'))
                       art_text = art_text.replace(/}/g, '');
@@ -766,7 +797,7 @@ else if (matchDomain('lasegunda.com')) {
                     let parser = new DOMParser();
                     let doc = parser.parseFromString('<div style="margin: 20px 0px;">' + DOMPurify.sanitize(art_text, dompurify_options) + '<br></div>', 'text/html');
                     let article_new = doc.querySelector('div');
-                    page.appendChild(article_new);
+                    page.append(article_new, document.createElement('br'));
                   }
                 } catch (err) {
                   console.log(err);
@@ -789,6 +820,11 @@ else if (matchDomain('milenio.com')) {
   if (window.location.pathname.startsWith('/milenio-plus'))
     header_nofix('main');
   let ads = 'aside[data-camus-module-type="ad"], aside#taboola-below-article-thumbnails-no-feed';
+  hideDOMStyle(ads);
+}
+
+else if (matchDomain('nacion.com')) {
+  let ads = 'div[data-ad-label]';
   hideDOMStyle(ads);
 }
 
