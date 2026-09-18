@@ -33,24 +33,16 @@ bun run pdf -- https://example.com --format Letter --json
 ## Start local API with auth
 
 ```bash
-SHUVCRAWL_API_TOKEN=secret123 bun run serve -- --port 3777
-curl -H "Authorization: Bearer secret123" http://localhost:3777/health
+sc up
+sc health
 ```
 
 ## Scrape through API
 
 ```bash
-curl -X POST http://localhost:3777/scrape \
-  -H "Content-Type: application/json" \
-  -H "Authorization: Bearer secret123" \
-  -d '{
-    "url": "https://example.com/article",
-    "options": {
-      "wait": "networkidle",
-      "rawHtml": true,
-      "onlyMainContent": true
-    }
-  }'
+sc scrape https://example.com/article
+# Browser path, default wait=load:
+sc scrape --no-fast-path https://example.com/article
 ```
 
 ## Crawl and poll through API

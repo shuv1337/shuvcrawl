@@ -105,6 +105,9 @@ export function classifyError(error: unknown): ClassifiedError {
         message,
         status: 504,
         exitCode: 3,
+        details: /networkidle/i.test(message)
+          ? { hint: 'networkidle rarely settles on ad-heavy pages; retry with wait=load' }
+          : undefined,
       };
     }
 

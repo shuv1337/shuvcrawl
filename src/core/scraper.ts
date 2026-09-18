@@ -13,6 +13,7 @@ import { ensureArtifactDir, writeArtifact } from '../storage/artifacts.ts';
 import { buildCacheKey, readCache, writeCache } from '../storage/cache.ts';
 import { discoverPageLinks, type BlockRole } from './discovery.ts';
 import { isTweetUrl, fetchTweet } from './twitter.ts';
+import { gotoPage } from './page-goto.ts';
 
 export type WaitStrategy = 'load' | 'networkidle' | 'selector' | 'sleep';
 
@@ -235,16 +236,17 @@ export async function scrapeUrl(
 
       const browserStage = await measureStage(logger, 'scrape.browser', withParentSpan(preflight.spanId || undefined), async () => {
         const timeout = options.waitTimeout ?? config.browser.defaultTimeout;
-
-        // Determine waitUntil for goto
-        let gotoWaitUntil: 'load' | 'networkidle' | 'domcontentloaded' = 'load';
-        if (waitStrategy === 'networkidle') {
-          gotoWaitUntil = 'networkidle';
+        const gotoWait = waitStrategy === 'networkidle' ? 'networkidle' : 'load';
+        const navigated = await gotoPage(browser.page, url, gotoWait, timeout);
+        if (navigated.fellBack) {
+          logger.warn('scrape.browser.networkidle_fallback', {
+            ...telemetry,
+            url,
+            timeout,
+          });
+          waitStrategy = 'load';
         }
 
-        await browser.page.goto(url, { waitUntil: gotoWaitUntil, timeout });
-
-        // Apply additional wait strategies
         await applyWaitStrategy(browser.page, waitStrategy, {
           waitFor: options.waitFor,
           waitTimeout: options.waitTimeout,

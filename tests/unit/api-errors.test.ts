@@ -8,6 +8,17 @@ test('mapError maps timeout to TIMEOUT', () => {
   expect(mapped.body.error.code).toBe('TIMEOUT');
 });
 
+test('mapError adds a wait=load hint for networkidle timeouts', () => {
+  const error = new Error('goto: Timeout 30000ms exceeded.\nCall log:\n  - navigating to "https://example.com/", waiting until "networkidle"\n');
+  error.name = 'TimeoutError';
+  const mapped = mapError(error);
+  expect(mapped.status).toBe(504);
+  expect(mapped.body.error.code).toBe('TIMEOUT');
+  expect(mapped.body.error.details).toEqual({
+    hint: 'networkidle rarely settles on ad-heavy pages; retry with wait=load',
+  });
+});
+
 test('mapError maps browser init failure', () => {
   const error = new Error('serviceworker not available in browser');
   const mapped = mapError(error);

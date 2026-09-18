@@ -33,7 +33,7 @@ Request body:
     "noCache": false,
     "mobile": false,
     "debugArtifacts": false,
-    "wait": "networkidle",
+    "wait": "load",
     "waitFor": "#content",
     "waitTimeout": 30000,
     "sleep": 1000,
@@ -116,7 +116,7 @@ Request body:
   "options": {
     "format": "A4",
     "landscape": false,
-    "wait": "networkidle"
+    "wait": "load"
   }
 }
 ```

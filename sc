@@ -64,7 +64,11 @@ def _api(method, url, token=None, body=None, timeout=120):
             err = err_body["error"]
             code = err.get("code", e.code)
             msg = err.get("message", str(e))
-            _err(f"[{code}] {msg}")
+            hint = ""
+            details = err.get("details") or {}
+            if isinstance(details, dict) and details.get("hint"):
+                hint = f"\nHint: {details['hint']}"
+            _err(f"[{code}] {msg}{hint}")
         else:
             _err(f"HTTP {e.code}: {e.reason}")
     except urllib.error.URLError as e:
@@ -195,6 +199,12 @@ def cmd_scrape(args):
     method = meta.get("extractionMethod")
     if method:
         parts.append(f"method: {method}")
+    bypass = meta.get("bypassMethod") or (data.get("meta") or {}).get("bypassMethod")
+    if bypass:
+        parts.append(bypass)
+    wait = meta.get("waitStrategy")
+    if wait:
+        parts.append(f"wait: {wait}")
 
     output_lines = []
     if title:

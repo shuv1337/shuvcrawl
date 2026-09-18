@@ -148,7 +148,7 @@ curl -H "Authorization: Bearer secret123" http://localhost:3777/health
 ```bash
 curl -X POST http://localhost:3777/scrape \
   -H "Content-Type: application/json" \
-  -d '{"url": "https://example.com/article", "options": {"wait": "networkidle"}}'
+  -d '{"url": "https://example.com/article"}'
 ```
 
 ### Response Format

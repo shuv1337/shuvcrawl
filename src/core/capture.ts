@@ -9,6 +9,7 @@ import { expandHome } from '../utils/paths.ts';
 import { normalizeUrl } from '../utils/url.ts';
 import { ensureArtifactDir, writeArtifact } from '../storage/artifacts.ts';
 import type { BrowserPoolLike } from './browser.ts';
+import { gotoPage } from './page-goto.ts';
 
 export type WaitStrategy = 'load' | 'networkidle' | 'selector' | 'sleep';
 
@@ -115,10 +116,16 @@ export async function captureScreenshot(
     const waitStrategy = options.wait ?? 'load';
     const capture = await measureStage(logger, 'screenshot.capture', telemetry, async () => {
       const timeout = options.waitTimeout ?? config.browser.defaultTimeout;
-      const waitUntil = waitStrategy === 'networkidle' ? 'networkidle' : 'load';
-
-      await browser.page.goto(url, { waitUntil, timeout });
-      await applyWaitStrategy(browser.page, waitStrategy, {
+      const gotoWait = waitStrategy === 'networkidle' ? 'networkidle' : 'load';
+      const navigated = await gotoPage(browser.page, url, gotoWait, timeout);
+      if (navigated.fellBack) {
+        logger.warn('screenshot.browser.networkidle_fallback', {
+          ...telemetry,
+          url,
+          timeout,
+        });
+      }
+      await applyWaitStrategy(browser.page, navigated.fellBack ? 'load' : waitStrategy, {
         waitFor: options.waitFor,
         waitTimeout: options.waitTimeout,
         sleep: options.sleep,
@@ -181,10 +188,16 @@ export async function renderPdf(
     const waitStrategy = options.wait ?? 'load';
     const pdf = await measureStage(logger, 'pdf.render', telemetry, async () => {
       const timeout = options.waitTimeout ?? config.browser.defaultTimeout;
-      const waitUntil = waitStrategy === 'networkidle' ? 'networkidle' : 'load';
-
-      await browser.page.goto(url, { waitUntil, timeout });
-      await applyWaitStrategy(browser.page, waitStrategy, {
+      const gotoWait = waitStrategy === 'networkidle' ? 'networkidle' : 'load';
+      const navigated = await gotoPage(browser.page, url, gotoWait, timeout);
+      if (navigated.fellBack) {
+        logger.warn('pdf.browser.networkidle_fallback', {
+          ...telemetry,
+          url,
+          timeout,
+        });
+      }
+      await applyWaitStrategy(browser.page, navigated.fellBack ? 'load' : waitStrategy, {
         waitFor: options.waitFor,
         waitTimeout: options.waitTimeout,
         sleep: options.sleep,

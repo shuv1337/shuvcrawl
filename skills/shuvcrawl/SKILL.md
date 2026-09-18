@@ -64,13 +64,13 @@ curl http://localhost:3777/health
 1. Check whether shuvcrawl is already available:
 
 ```bash
-curl -sf http://localhost:3777/health
+sc health
 ```
 
 2. If not available, start it with Docker or locally:
 
 ```bash
-docker compose up -d --build
+sc up
 # or
 bun run serve -- --port 3777
 ```
@@ -93,16 +93,7 @@ bun run serve -- --port 3777
 ### Scrape
 
 ```bash
-curl -X POST http://localhost:3777/scrape \
-  -H "Content-Type: application/json" \
-  -d '{
-    "url": "https://example.com/article",
-    "options": {
-      "wait": "networkidle",
-      "rawHtml": true,
-      "onlyMainContent": true
-    }
-  }'
+sc scrape https://example.com/article
 ```
 
 ### Map
@@ -171,21 +162,19 @@ curl -X POST http://localhost:3777/pdf \
     "options": {
       "format": "A4",
       "landscape": false,
-      "wait": "networkidle"
+      "wait": "load"
     }
   }'
 ```
 
 ## Wait strategies and heuristics
 
-Use these request options carefully:
+Omit `wait` unless you have a reason to override. Default is `load`.
 
-- `wait: "load"` — default for straightforward pages
-- `wait: "networkidle"` — use for apps/pages with async fetches
-- `wait: "selector"` with `waitFor` — best when a specific DOM signal indicates readiness
-- `wait: "sleep"` with `sleep` milliseconds — fallback only when no reliable selector exists
-
-Prefer `selector` over `sleep` when possible.
+- `wait: "load"` — use this; ad-heavy pages almost never go idle
+- `wait: "selector"` with `waitFor` — when a specific DOM node means the article is ready
+- `wait: "networkidle"` — last resort; times out on ads/analytics. The service now falls back to `load` on that timeout
+- `wait: "sleep"` with `sleep` milliseconds — only when no selector exists
 
 ## Output interpretation
 
@@ -217,9 +206,9 @@ Common envelopes and meanings:
 
 If a request fails:
 
-1. inspect status code + `error.code`
+1. inspect status code + `error.code` and any `error.details.hint`
 2. reduce scope (single URL before crawl)
-3. switch wait strategy if the page is JS-heavy
+3. on `TIMEOUT`, retry with `wait=load` (or omit `--wait`)
 4. use screenshot/PDF for evidence when content extraction is ambiguous
 5. retry only when the failure looks transient
 

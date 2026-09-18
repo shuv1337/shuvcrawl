@@ -6,6 +6,7 @@ import { allowByRobots } from '../utils/robots.ts';
 import { normalizeUrl } from '../utils/url.ts';
 import { tryFastPath } from './fast-path.ts';
 import type { BrowserPoolLike } from './browser.ts';
+import { gotoPage } from './page-goto.ts';
 import { discoverPageLinks, discoverSitemapUrls, defaultMapInclude, shouldIncludeUrl, type BlockRole } from './discovery.ts';
 
 export type WaitStrategy = 'load' | 'networkidle' | 'selector' | 'sleep';
@@ -140,15 +141,17 @@ export async function mapUrl(
         const waitStrategy = options.wait ?? 'load';
         const browserStage = await measureStage(logger, 'map.browser', withParentSpan(preflight.spanId || undefined), async () => {
           const timeout = options.waitTimeout ?? config.browser.defaultTimeout;
-          let gotoWaitUntil: 'load' | 'networkidle' = 'load';
-          if (waitStrategy === 'networkidle') {
-            gotoWaitUntil = 'networkidle';
+          const gotoWait = waitStrategy === 'networkidle' ? 'networkidle' : 'load';
+          const navigated = await gotoPage(browser.page, url, gotoWait, timeout);
+          if (navigated.fellBack) {
+            logger.warn('map.browser.networkidle_fallback', {
+              ...telemetry,
+              url,
+              timeout,
+            });
           }
 
-          await browser.page.goto(url, { waitUntil: gotoWaitUntil, timeout });
-
-          // Apply additional wait strategies
-          await applyWaitStrategy(browser.page, waitStrategy, {
+          await applyWaitStrategy(browser.page, navigated.fellBack ? 'load' : waitStrategy, {
             waitFor: options.waitFor,
             waitTimeout: options.waitTimeout,
             sleep: options.sleep,
