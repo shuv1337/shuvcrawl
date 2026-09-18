@@ -171,10 +171,10 @@ curl -X POST http://localhost:3777/pdf \
 
 Omit `wait` unless you have a reason to override. Default is `load`.
 
-- `wait: "load"` — use this; ad-heavy pages almost never go idle
+- `wait: "load"` — default. Fast challenge shells can snapshot here; classify HTML before treating the result as an article
 - `wait: "selector"` with `waitFor` — when a specific DOM node means the article is ready
-- `wait: "networkidle"` — last resort; times out on ads/analytics. The service now falls back to `load` on that timeout
-- `wait: "sleep"` with `sleep` milliseconds — only when no selector exists
+- `wait: "networkidle"` — last resort; times out on ads/analytics and falls back to `load` with no extra dwell
+- `wait: "sleep"` with `sleep` milliseconds — the only guaranteed post-load dwell. `sleep` is ignored unless `wait` is `sleep`. Use this when `load` returns a challenge shell or empty extract
 
 ## Output interpretation
 
@@ -208,9 +208,9 @@ If a request fails:
 
 1. inspect status code + `error.code` and any `error.details.hint`
 2. reduce scope (single URL before crawl)
-3. on `TIMEOUT`, retry with `wait=load` (or omit `--wait`)
-4. use screenshot/PDF for evidence when content extraction is ambiguous
-5. retry only when the failure looks transient
+3. classify empty/partial or domain-only-title results before changing flags. HTTP 200 can still be a challenge page. `wait: "sleep"` 3000–5000 is the dwell retry; repeating `wait=load` re-snapshots the same shell
+4. use screenshot/PDF or `debugArtifacts` for evidence when content extraction is ambiguous
+5. retry only when the failure looks transient. Prove fast-path per host; skip it after reject, hang, or challenge
 
 ## References
 
